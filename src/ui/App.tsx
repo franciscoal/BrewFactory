@@ -1,10 +1,74 @@
-import { BALANCE } from '../engine/balance';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import type { Estado } from '../engine';
+import { Cabecera } from './Cabecera';
+import { Ctx } from './contexto';
+import { Demanda } from './Demanda';
+import { Muelles, Stock } from './Expediciones';
+import { FinPartida } from './FinPartida';
+import { juegoNuevo, tick, vistaDe } from './juego';
+import type { Juego, Resultado } from './juego';
+import { Lineas } from './Lineas';
+import { Resultados } from './Resultados';
 
 export function App() {
+  const [j, setJ] = useState<Juego>(() => juegoNuevo());
+  const [arrastre, setArrastre] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
+  const temporizador = useRef<number>();
+
+  // Reloj del ciclo: un tick por segundo mientras se juega.
+  useEffect(() => {
+    if (j.fase !== 'jugando') return;
+    const id = setInterval(() => setJ(tick), 1000);
+    return () => clearInterval(id);
+  }, [j.fase]);
+
+  const vista = useMemo(() => vistaDe(j.estado, j.plan), [j.estado, j.plan]);
+
+  const mostrarAviso = (texto: string) => {
+    setAviso(texto);
+    clearTimeout(temporizador.current);
+    temporizador.current = window.setTimeout(() => setAviso(null), 3500);
+  };
+
+  const ctx = {
+    j,
+    setJ,
+    vista,
+    arrastre,
+    setArrastre,
+    hacer: (op: (v: Estado) => Resultado) => {
+      if (j.fase === 'terminado') return;
+      const r = op(vista);
+      if ('error' in r) mostrarAviso(r.error);
+      else setJ((x) => ({ ...x, plan: r.plan }));
+    },
+    esValida: (op: (v: Estado) => Resultado) => j.fase !== 'terminado' && !('error' in op(vista)),
+  };
+
   return (
-    <main class="shell">
-      <h1>BrewFactory</h1>
-      <p>Simulador de fábrica de bebidas. Ciclo por defecto: {BALANCE.cicloSegundosPorDefecto} s.</p>
-    </main>
+    <Ctx.Provider value={ctx}>
+      <div class="app">
+        <Cabecera />
+        {j.errores.length > 0 && (
+          <div class="errores" role="status">
+            Acciones descartadas en el último ciclo: {j.errores.join(' · ')}
+          </div>
+        )}
+        <main class="tablero">
+          <Demanda />
+          <Lineas />
+          <Stock />
+          <Muelles />
+          <Resultados />
+        </main>
+        {aviso && (
+          <div class="aviso" role="alert">
+            {aviso}
+          </div>
+        )}
+        <FinPartida />
+      </div>
+    </Ctx.Provider>
   );
 }

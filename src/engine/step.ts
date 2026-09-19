@@ -79,20 +79,33 @@ function calcularOkr(e: Estado): Okr {
   return { ...okr, rentabilidad: rentabilidad(okr) };
 }
 
-/** Paso 2: las líneas 1→4 producen; el sobrante pasa al pedido siguiente o se pierde. */
-function producir(e: Estado): void {
+/**
+ * Paso 2: las líneas 1→4 producen; el sobrante pasa al pedido siguiente o se pierde.
+ * Devuelve las botellas aportadas por cada línea (id de línea → botellas).
+ */
+function producir(e: Estado): Map<number, number> {
   const porId = new Map(e.pedidos.map((p) => [p.id, p]));
+  const porLinea = new Map<number, number>();
   for (const l of e.lineas) {
     if (!lineaActiva(l)) continue;
     let capacidad = BALANCE.velocidades[l.velocidad].botellas;
+    let aportado = 0;
     for (const id of [l.actual, l.siguiente]) {
       if (id === null || capacidad <= 0) continue;
       const p = porId.get(id)!;
       const botellas = Math.min(capacidad, p.cantidad - p.producido);
       p.producido += botellas;
       capacidad -= botellas;
+      aportado += botellas;
     }
+    porLinea.set(l.id, aportado);
   }
+  return porLinea;
+}
+
+/** Botellas que aportará cada línea en la próxima resolución con la configuración actual. No muta `e`. */
+export function previsionProduccion(e: Estado): Map<number, number> {
+  return producir(structuredClone(e));
 }
 
 /** Paso 3: los muelles expiden los pedidos asignados, que desaparecen del stock y del muelle. */

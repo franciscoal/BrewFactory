@@ -31,11 +31,11 @@ const acc = (lineas: Partial<Acciones['lineas'][number]>[], muelles: Acciones['m
 const get = (e: Estado, id: string) => e.pedidos.find((p) => p.id === id)!;
 
 describe('estado inicial', () => {
-  it('arranca al 100 % con 6 pedidos y líneas apagadas', () => {
+  it('arranca al 100 % con 6 pedidos y líneas encendidas sin pedido', () => {
     const e = estadoInicial(1);
     expect(e.okr).toEqual({ cumplimiento: 100, productividad: 100, entrega: 100, rentabilidad: 100 });
     expect(e.pedidos).toHaveLength(6);
-    expect(e.lineas.every((l) => !l.encendida)).toBe(true);
+    expect(e.lineas.every((l) => l.encendida && l.actual === null)).toBe(true);
   });
 
   it('es determinista con la misma semilla', () => {

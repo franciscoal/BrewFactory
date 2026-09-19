@@ -12,7 +12,8 @@ export function estadoInicial(semilla = 1): Estado {
     pedidos: [],
     lineas: Array.from({ length: BALANCE.numLineas }, (_, i) => ({
       id: i + 1,
-      encendida: false,
+      // Encendidas pero sin pedido: inactivas hasta que se les asigne uno.
+      encendida: true,
       velocidad: 'estandar' as const,
       actual: null,
       siguiente: null,
