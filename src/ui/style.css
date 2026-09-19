@@ -110,6 +110,10 @@ h3 {
   color: var(--mal);
 }
 
+.kpi.neutro .kpi-valor {
+  color: var(--texto);
+}
+
 .controles {
   display: flex;
   gap: 1.2rem;
@@ -136,12 +140,29 @@ h3 {
   color: #fff;
 }
 
-.reloj,
+.btn.icono {
+  min-width: 2.4rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
 .ajustes {
   display: flex;
   gap: 0.9rem;
   align-items: center;
   font-size: 0.9rem;
+}
+
+.siguiente {
+  color: var(--suave);
+  white-space: nowrap;
+  align-self: flex-end;
+  padding-bottom: 0.15rem;
+}
+
+.siguiente b {
+  color: var(--texto);
 }
 
 .fase {
@@ -158,8 +179,31 @@ h3 {
   color: var(--suave);
 }
 
+/* Campos de la cabecera (Ciclos totales, Escenario): fondo gris y un punto más grandes que su etiqueta. */
+.campo input[type='number'],
+.campo select {
+  background: #e6e2d6;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--texto);
+}
+
 .campo input[type='number'] {
   width: 5rem;
+}
+
+.campo select {
+  min-width: 11rem;
+  cursor: pointer;
+}
+
+.campo input:disabled,
+.campo select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .toggle {
@@ -167,6 +211,24 @@ h3 {
   gap: 0.3rem;
   align-items: center;
   font-size: 0.85rem;
+}
+
+.interruptor-etiquetado {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.interruptor-etiquetado.desactivado {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.interruptor-texto {
+  white-space: nowrap;
 }
 
 .errores,
@@ -647,7 +709,7 @@ h3 {
 
 .linea-cuerpo {
   display: grid;
-  grid-template-columns: 1fr auto 1.5fr 105px;
+  grid-template-columns: 1fr auto 1.5fr 128px;
   gap: 0.4rem;
   align-items: stretch;
 }
@@ -700,12 +762,24 @@ h3 {
   gap: 0.25rem;
 }
 
-.velocidad {
-  flex: 1;
+.velocidad-icono {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.velocidad-texto {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
+}
+
+.velocidad {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.35rem;
   padding: 0.15rem 0.4rem;
   border: 1px solid var(--borde);
   border-radius: 6px;
@@ -835,4 +909,120 @@ td:first-child {
 
 .puntuacion {
   font-size: 1.4rem;
+}
+
+/* ── Pantallas medianas y pequeñas ────────────────────── */
+@media (max-width: 1200px) {
+  .app {
+    height: auto;
+    min-height: 100vh;
+    min-width: 0;
+  }
+
+  .tablero {
+    flex: none;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tablero .lineas {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+
+  .tablero .lista {
+    max-height: 60vh;
+  }
+
+  .tablero .lineas .lista {
+    max-height: none;
+  }
+
+  .pagina-resultados {
+    flex: none;
+  }
+
+  .graficas,
+  .informe,
+  .ia-columnas {
+    grid-template-columns: 1fr;
+  }
+
+  .informe {
+    max-height: none;
+  }
+
+  .controles {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .cabecera {
+    gap: 0.6rem;
+    padding: 0.5rem 0.6rem;
+  }
+
+  .okr {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .kpi {
+    min-width: 0;
+    flex: 1 1 28%;
+  }
+
+  .kpi.grande {
+    flex-basis: 60%;
+  }
+
+  .kpi.grande .kpi-valor {
+    font-size: 2rem;
+  }
+
+  .controles {
+    width: 100%;
+    gap: 0.6rem;
+  }
+
+  .botones,
+  .ajustes {
+    flex-wrap: wrap;
+  }
+
+  .tablero {
+    grid-template-columns: 1fr;
+    padding: 0.4rem;
+  }
+
+  .tablero .lista {
+    max-height: 50vh;
+  }
+
+  .linea-cuerpo {
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  .velocidades {
+    grid-column: 1 / -1;
+    flex-direction: row;
+  }
+
+  .velocidad {
+    padding: 0.25rem 0.3rem;
+  }
+
+  .modal {
+    min-width: 0;
+    width: 94vw;
+    padding: 1rem;
+  }
+
+  .config-grupos {
+    grid-template-columns: 1fr;
+  }
+
+  .pestana {
+    padding: 0.45rem 0.7rem;
+  }
 }

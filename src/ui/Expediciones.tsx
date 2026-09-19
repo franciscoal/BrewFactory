@@ -9,7 +9,7 @@ export function Stock() {
   return (
     <section class="panel stock">
       <header class="panel-cab">
-        <h2>Stock de expediciones</h2>
+        <h2>📦 Stock de expediciones</h2>
       </header>
       <div class="lista">
         {stock.length === 0 && <p class="vacio">Stock vacío</p>}
@@ -26,7 +26,7 @@ export function Muelles() {
   return (
     <section class="panel muelles">
       <header class="panel-cab">
-        <h2>Muelles</h2>
+        <h2>🚚 Muelles</h2>
       </header>
       <div class="lista">
         {vista.muelles.map((asignado, i) => {

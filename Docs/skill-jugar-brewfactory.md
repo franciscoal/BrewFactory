@@ -156,6 +156,26 @@ Respuesta razonada: expido `P-1` (terminado). `P-2` vence en 1 ciclo y le faltan
 - Poner `alta` en todas las líneas de forma sostenida: hunde la productividad.
 - Añadir texto antes o después del JSON.
 
+## Si juegas por la API HTTP
+
+Si tienes acceso a HTTP (una herramienta de terminal, `curl`, un cliente web…) y la persona te da la dirección del juego (por ejemplo `http://localhost:5173`), no hace falta copiar y pegar. La aplicación debe estar abierta en el navegador con el interruptor **Conexión API** activado (un punto 🟢 lo confirma). El bucle es:
+
+1. `GET {base}/api/estado` → el estado (el JSON descrito arriba).
+2. Decide y envía la configuración: `POST {base}/api/acciones` con el JSON de acciones como cuerpo (`Content-Type: application/json`). La respuesta trae `descartadas`: las acciones que se ignoraron y por qué. **Este paso no avanza el ciclo.**
+3. `POST {base}/api/paso` → resuelve un ciclo y devuelve el estado nuevo en `estado` (con `erroresCicloAnterior` e `informeCicloAnterior`). Vuelve al punto 2 con ese estado, sin necesidad de otro `GET`.
+
+Ejemplo con `curl`:
+
+```bash
+curl -s http://localhost:5173/api/estado
+curl -s -X POST http://localhost:5173/api/acciones -H "Content-Type: application/json" -d @acciones.json
+curl -s -X POST http://localhost:5173/api/paso
+```
+
+Códigos de respuesta: **200** correcto; **400** el JSON no es válido o la orden no se puede ejecutar (el mensaje `error` lo explica, por ejemplo «la partida está en marcha: pulsa Pause»); **503** la interfaz no está conectada; **504** la interfaz no respondió a tiempo. `GET {base}/api/skill` devuelve este mismo documento.
+
+Reglas de juego en este modo: `POST /api/paso` solo funciona con la partida **parada o en pausa**; si está en marcha (Play), pide a la persona que pulse Pause. Si termina la partida, las órdenes dejan de aceptarse.
+
 ## Cómo lo usa la persona
 
 1. En el juego, con la partida parada o en **Pause**, pulsa **🤖 IA mode**.

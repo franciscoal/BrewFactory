@@ -1,13 +1,15 @@
 import { BALANCE, previsionProduccion } from '../engine';
 import type { Linea, Velocidad } from '../engine';
 import { useCtx } from './contexto';
+import { Interruptor } from './Interruptor';
 import { opAsignar, opEncender, opIntercambiar, opQuitar, opVelocidad } from './juego';
 import { PedidoCard } from './PedidoCard';
 
-const VELOCIDADES: { id: Velocidad; nombre: string }[] = [
-  { id: 'alta', nombre: 'Alta' },
-  { id: 'estandar', nombre: 'Estándar' },
-  { id: 'baja', nombre: 'Baja' },
+/** Caballo desbocado para Alta: velocidad y descontrol. */
+const VELOCIDADES: { id: Velocidad; nombre: string; icono: string }[] = [
+  { id: 'alta', nombre: 'Alta', icono: '🐎' },
+  { id: 'estandar', nombre: 'Estándar', icono: '🐕' },
+  { id: 'baja', nombre: 'Baja', icono: '🐌' },
 ];
 
 function LineaPanel({ linea, botellas }: { linea: Linea; botellas: number }) {
@@ -39,14 +41,11 @@ function LineaPanel({ linea, botellas }: { linea: Linea; botellas: number }) {
       <header class="linea-cab">
         <h3>Línea {linea.id}</h3>
         <span class="estado-linea">{!linea.encendida ? 'apagada' : activa ? 'activa' : 'sin pedido'}</span>
-        <label class="interruptor" title="Encender / apagar la línea">
-          <input
-            type="checkbox"
-            checked={linea.encendida}
-            onChange={(e) => hacer((v) => opEncender(v, linea.id, e.currentTarget.checked))}
-          />
-          <span class="pista" />
-        </label>
+        <Interruptor
+          marcado={linea.encendida}
+          onCambio={(v) => hacer((vista) => opEncender(vista, linea.id, v))}
+          titulo="Encender / apagar la línea"
+        />
       </header>
 
       <div class="linea-cuerpo">
@@ -87,11 +86,16 @@ function LineaPanel({ linea, botellas }: { linea: Linea; botellas: number }) {
               disabled={!linea.encendida}
               onClick={() => hacer((vi) => opVelocidad(vi, linea.id, v.id))}
             >
-              <b>{v.nombre}</b>
-              <small>
-                {BALANCE.velocidades[v.id].botellas} bot. · {BALANCE.velocidades[v.id].productividad > 0 ? '+' : ''}
-                {BALANCE.velocidades[v.id].productividad} %
-              </small>
+              <span class="velocidad-icono" aria-hidden="true">
+                {v.icono}
+              </span>
+              <span class="velocidad-texto">
+                <b>{v.nombre}</b>
+                <small>
+                  {BALANCE.velocidades[v.id].botellas} bot. · {BALANCE.velocidades[v.id].productividad > 0 ? '+' : ''}
+                  {BALANCE.velocidades[v.id].productividad} %
+                </small>
+              </span>
             </button>
           ))}
         </div>
@@ -114,7 +118,7 @@ export function Lineas() {
   return (
     <section class="panel lineas">
       <header class="panel-cab">
-        <h2>Líneas de producción</h2>
+        <h2>🏭 Líneas de producción</h2>
       </header>
       <div class="lista">
         {vista.lineas.map((l) => (

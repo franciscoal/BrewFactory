@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { Estado } from '../engine';
 import { Cabecera } from './Cabecera';
+import { useConexionApi } from './conexionApi';
 import { Ctx } from './contexto';
 import { Demanda } from './Demanda';
 import { Muelles, Stock } from './Expediciones';
@@ -16,6 +17,7 @@ export function App() {
   const [arrastre, setArrastre] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [mostrarInforme, setMostrarInforme] = useState(false);
+  const [apiActiva, setApiActiva] = useState(true);
   const [pestana, setPestana] = useState<'fabrica' | 'resultados'>('fabrica');
   const [resaltado, setResaltado] = useState<Cambios | null>(null);
   const temporizadorResaltado = useRef<number>();
@@ -42,6 +44,8 @@ export function App() {
     temporizadorResaltado.current = window.setTimeout(() => setResaltado(null), 4000);
   };
 
+  const estadoApi = useConexionApi(apiActiva, j, setJ, resaltar);
+
   const ctx = {
     j,
     setJ,
@@ -50,6 +54,9 @@ export function App() {
     setArrastre,
     resaltado,
     resaltar,
+    apiActiva,
+    setApiActiva,
+    estadoApi,
     mostrarInforme,
     setMostrarInforme,
     hacer: (op: (v: Estado) => Resultado) => {
@@ -79,7 +86,7 @@ export function App() {
         <nav class="pestanas" role="tablist">
           {(['fabrica', 'resultados'] as const).map((p) => (
             <button key={p} role="tab" aria-selected={pestana === p} class={`pestana${pestana === p ? ' activa' : ''}`} onClick={() => setPestana(p)}>
-              {p === 'fabrica' ? '🏭 Fábrica' : '📈 Resultados'}
+              {p === 'fabrica' ? '🍺 Fábrica' : '📈 Resultados'}
             </button>
           ))}
         </nav>

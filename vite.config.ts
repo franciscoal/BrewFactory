@@ -4,6 +4,17 @@ import { resolve } from 'node:path';
 import preact from '@preact/preset-vite';
 import type { Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
+import { crearApi } from './servidor/api.ts';
+
+/** Monta la API para la IA (servidor/api.ts) bajo /api en el servidor de desarrollo y en `vite preview`. */
+function apiParaIA(): Plugin {
+  const api = crearApi();
+  return {
+    name: 'brewfactory-api-ia',
+    configureServer: (servidor) => void servidor.middlewares.use('/api', (req, res, siguiente) => void api.manejador(req, res, siguiente)),
+    configurePreviewServer: (servidor) => void servidor.middlewares.use('/api', (req, res, siguiente) => void api.manejador(req, res, siguiente)),
+  };
+}
 
 /**
  * Permite que el botón de configuración (⚙) guarde en el fichero `public/config/balance.json`
@@ -40,8 +51,8 @@ function guardarConfiguracion(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [preact(), guardarConfiguracion()],
+  plugins: [preact(), guardarConfiguracion(), apiParaIA()],
   // Guardar la configuración no debe recargar la página (se perdería la partida en curso).
   server: { port: 5173, watch: { ignored: ['**/public/config/**'] } },
-  test: { environment: 'node', include: ['src/**/*.test.ts'] },
+  test: { environment: 'node', include: ['src/**/*.test.ts', 'servidor/**/*.test.ts'] },
 });

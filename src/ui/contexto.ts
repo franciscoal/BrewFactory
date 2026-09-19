@@ -1,6 +1,7 @@
 import { createContext } from 'preact';
 import { useContext } from 'preact/hooks';
 import type { Estado } from '../engine';
+import type { EstadoApi } from './conexionApi';
 import type { Cambios, Juego, Resultado } from './juego';
 
 export interface Contexto {
@@ -14,6 +15,10 @@ export interface Contexto {
   /** Elementos que acaba de cambiar la IA; se resaltan unos segundos. */
   resaltado: Cambios | null;
   resaltar: (cambios: Cambios) => void;
+  /** Conexión con la API HTTP local para la IA. */
+  apiActiva: boolean;
+  setApiActiva: (v: boolean) => void;
+  estadoApi: EstadoApi;
   /** Toggle «Mostrar estado por ciclo». */
   mostrarInforme: boolean;
   setMostrarInforme: (v: boolean) => void;

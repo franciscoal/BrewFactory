@@ -51,15 +51,32 @@ npx tsx scripts/calibrar.ts 48 200 --config=otro-balance.json   # probar otro fi
 1. Arrastra pedidos de **Demanda comercial** a las líneas de producción (hueco *actual* o *siguiente*).
 2. Elige la velocidad de cada línea y enciende o apaga las que quieras.
 3. Cuando un pedido termina, arrástralo desde el **Stock de expediciones** a un **muelle** para expedirlo.
-4. Pulsa **Play** (el ciclo avanza solo, 15 s por defecto), **Pause** o **Paso** (un ciclo manual).
+4. Pulsa ▶ (el ciclo avanza solo, 15 s por defecto), ⏸ para pausar o ⏭ para avanzar un ciclo a mano.
 
 Otras funciones de la cabecera:
 
 - **Escenario**: demanda aleatoria por semilla o uno de los escenarios enlatados (`src/escenarios/`). Se puede cargar uno propio en JSON.
 - **Mostrar estado por ciclo**: resume qué se decidió en cada ciclo y el impacto en los OKR.
-- **🤖 IA mode**: copia el estado en JSON para una IA y aplica las acciones que devuelva.
+- **▶ ⏸ ⏹ ⏭**: Play, Pause, Stop y Paso (un ciclo manual).
+- **🤖 IA mode**: copia el estado en JSON para una IA y aplica las acciones que devuelva. **Conexión API** lo hace por HTTP.
 - **⚙ Configuración**: ajusta todas las bonificaciones y penalizaciones y las guarda en `public/config/balance.json`.
 - Pestaña **Resultados**: gráficas y tabla por ciclo. Al terminar la partida se puede guardar el resultado en JSON.
+
+## Jugar con una IA
+
+Hay dos formas:
+
+1. **Copiar y pegar** (no necesita nada más): en **🤖 IA mode**, copia el estado, pégalo en una IA junto con [Docs/skill-jugar-brewfactory.md](Docs/skill-jugar-brewfactory.md) y pega en el juego el JSON de acciones que te devuelva.
+2. **API HTTP local** (con `npm run dev` o `npm run preview`): con la aplicación abierta en el navegador y el interruptor **Conexión API** activado, un agente puede jugar solo:
+
+```bash
+curl -s http://localhost:5173/api/estado                      # estado para la IA
+curl -s -X POST http://localhost:5173/api/acciones -H "Content-Type: application/json" -d @acciones.json
+curl -s -X POST http://localhost:5173/api/paso                # resuelve un ciclo y devuelve el estado nuevo
+curl -s http://localhost:5173/api/skill                       # instrucciones para la IA
+```
+
+`/api/paso` solo funciona con la partida parada o en pausa. Si hay varias ventanas abiertas, solo la primera controla la API (las demás muestran 🟠). El estado vive en el navegador; el servidor solo hace de buzón.
 
 ## Estructura
 
@@ -69,6 +86,7 @@ Otras funciones de la cabecera:
 | `src/ui/` | Interfaz (Preact): paneles, arrastrar y soltar, configuración, modo IA. |
 | `src/bots/` | Estrategias automáticas y simulador usados para calibrar. |
 | `src/escenarios/` | Escenarios enlatados en JSON. |
+| `servidor/` | API HTTP local para la IA (`servidor/api.ts`), montada por Vite en desarrollo y en `preview`. |
 | `public/config/balance.json` | **Cifras del juego** (fuente única). |
 | `src/config/balance-original.json` | Cifras de la especificación original, usadas por los tests y por «Restaurar originales». |
 | `scripts/calibrar.ts` | Script de calibración. |

@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks';
 import { colaDemanda } from '../engine';
 import { useCtx } from './contexto';
+import { Interruptor } from './Interruptor';
 import { PedidoCard } from './PedidoCard';
 
 export function Demanda() {
@@ -11,11 +12,8 @@ export function Demanda() {
   return (
     <section class="panel demanda">
       <header class="panel-cab">
-        <h2>Demanda comercial</h2>
-        <label class="toggle">
-          <input type="checkbox" checked={porVencimiento} onChange={(e) => setPorVencimiento(e.currentTarget.checked)} />
-          Ordenar por vencimiento
-        </label>
+        <h2>📋 Demanda comercial</h2>
+        <Interruptor marcado={porVencimiento} onCambio={setPorVencimiento} etiqueta="Ordenar por vencimiento" />
       </header>
       <div class="lista">
         {cola.length === 0 && <p class="vacio">Sin pedidos pendientes</p>}

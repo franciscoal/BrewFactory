@@ -21,6 +21,8 @@ export interface Juego {
   limitar: boolean;
   totalCiclos: number;
   errores: string[];
+  /** Acciones descartadas al aplicar el plan de una IA durante este ciclo; pasan a `errores` al resolverlo. */
+  erroresAcciones: string[];
   log: EntradaLog[];
   /** Razonamiento que acompañó a las últimas acciones de la IA (se limpia al resolver el ciclo). */
   comentarioIA: string | null;
@@ -62,6 +64,7 @@ export function juegoNuevo(semilla = (Math.random() * 2 ** 31) >>> 0, escenario:
     limitar: false,
     totalCiclos: 24,
     errores: [],
+    erroresAcciones: [],
     log: [],
     comentarioIA: null,
   };
@@ -96,7 +99,7 @@ export function aplicarAccionesIA(j: Juego, acciones: Acciones): { juego: Juego;
   const despues = structuredClone(j.estado);
   const errores = aplicarAcciones(despues, acciones);
   return {
-    juego: { ...j, plan: planDesde(despues), comentarioIA: acciones.comentario ?? null },
+    juego: { ...j, plan: planDesde(despues), comentarioIA: acciones.comentario ?? null, erroresAcciones: errores },
     errores,
     cambios: cambiosEntre(antes, despues),
   };
@@ -107,15 +110,19 @@ export function aplicarAccionesIA(j: Juego, acciones: Acciones): { juego: Juego;
 export function resolver(j: Juego): Juego {
   const r = step(j.estado, j.plan);
   const fin = j.limitar && r.estado.ciclo >= j.totalCiclos;
+  // Las acciones descartadas al aplicar el plan de una IA ya no aparecen en `r.errores` (el plan llegó normalizado):
+  // se conservan aquí para que la IA las vea en el estado siguiente.
+  const errores = [...j.erroresAcciones, ...r.errores];
   return {
     ...j,
     estado: r.estado,
     plan: planDesde(r.estado),
-    errores: r.errores,
+    errores,
+    erroresAcciones: [],
     restante: j.cicloSegundos,
     comentarioIA: null,
     fase: fin ? 'terminado' : j.fase,
-    log: [...j.log, { ciclo: r.estado.ciclo, acciones: j.plan, errores: r.errores, informe: r.informe }],
+    log: [...j.log, { ciclo: r.estado.ciclo, acciones: j.plan, errores, informe: r.informe }],
   };
 }
 

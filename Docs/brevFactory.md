@@ -173,10 +173,11 @@ Se muestra como porcentaje de 0 a 100 %. Es un **indicador aproximado de rentabi
 Después llega la resolución del ciclo (§2), que actualiza OKR, stock, contadores y demanda.
 
 **Control de partida:**
-- Botones **Play**, **Pause**, **Stop** y **Paso** (avanza un ciclo en pausa).
-- Campo **Ciclos totales**, contador de **ciclos pendientes** y toggle **«Limitar ciclos»**. Apagado, la partida es infinita y termina con Stop. Encendido, termina al agotar los ciclos.
-- **Tiempo de ciclo**: barra deslizante, por defecto **15 s** (rango 3–60 s).
-- Toggle **«Mostrar estado por ciclo»**: resume en la parte superior las decisiones del ciclo resuelto y su impacto (§8).
+- Botones **▶ Play**, **⏸ Pause**, **⏹ Stop** y **⏭ Paso** (avanza un ciclo en pausa). Solo llevan icono; el texto aparece al pasar el ratón.
+- Campo **Ciclos totales**, contador de **ciclos pendientes** e interruptor **«Limitar ciclos»**. Apagado, la partida es infinita y termina con Stop. Encendido, termina al agotar los ciclos.
+- **Tiempo de ciclo**: barra deslizante, por defecto **15 s** (rango 3–60 s). A su derecha, el tiempo que falta para el ciclo siguiente.
+- Interruptor **«Mostrar estado por ciclo»**: resume en la parte superior las decisiones del ciclo resuelto y su impacto (§8).
+- Interruptor **«Conexión API»**: permite que una IA juegue por HTTP (§9.1).
 - Al terminar, por Stop o por agotar ciclos, se ofrece **guardar el resultado**.
 
 ## 8. Interfaz
@@ -196,7 +197,10 @@ Después llega la resolución del ciclo (§2), que actualiza OKR, stock, contado
    Pestaña «Resultados»: gráficas (OKR y Rentabilidad) y, debajo, la tabla por ciclo.
 ```
 
-- **Panel superior (OKR):** cumplimiento, productividad y entrega, y **Rentabilidad en fuente mayor** por ser el indicador total, con el **emoji de estado** a su lado. Botones de control. En pausa, botón **IA mode** para cargar el JSON de una IA. El botón **⚙** abre la configuración (§8.1).
+- **Panel superior:** los marcos de Cumplimiento, Productividad y Entrega, **Rentabilidad en fuente mayor** por ser el indicador total, el **Ciclo** actual (con el mismo aspecto que Entrega, sin color de nivel) y el **emoji de estado**. No lleva rótulo «OKR». Debajo, los controles (§7): botones de icono, **🤖 IA mode** (con texto), **⚙** (configuración, §8.1), el escenario, el tiempo de ciclo y los interruptores.
+- **Estilo de los controles:** los interruptores deslizantes son los mismos que encienden y apagan las líneas. El desplegable de escenario tiene el mismo aspecto que el campo «Ciclos totales» (fondo gris, tamaño de letra un punto mayor que su etiqueta).
+- **Iconos:** 📋 Demanda comercial, 🏭 Líneas de producción, 📦 Stock de expediciones, 🚚 Muelles. En las velocidades, 🐌 Baja, 🐕 Estándar y 🐎 Alta (un caballo desbocado: velocidad y descontrol).
+- **Pantallas pequeñas:** hasta 1200 px de ancho el tablero pasa a dos columnas (con las líneas a todo el ancho) y hasta 720 px a una sola, con la página desplazable. El arrastrar y soltar necesita ratón (el arrastre táctil de los navegadores móviles es poco fiable): para la demo, usar un ordenador.
 - **Pestañas:** **Fábrica** (demanda, líneas, stock y muelles) y **Resultados** (gráficas y tabla por ciclo). El estado por ciclo y los OKR de la cabecera se ven en las dos.
 - **Estado por ciclo (opcional):** panel bajo la cabecera que resume cada ciclo resuelto. Se activa con el toggle **«Mostrar estado por ciclo»** (ver más abajo).
 - **Izquierda, demanda comercial:** tarjetas arrastrables con cantidad inicial, pendiente, ciclos originales, ciclos pendientes y líneas asociadas. Color: **verde tenue** si están asociadas a una línea, **blanco** si no tienen producción, **amarillo tenue** si están parcialmente producidas y sin línea.
@@ -262,7 +266,17 @@ El juego tiene dos interfaces: la UI para personas y una API para una IA.
 - Además, **«Copiar estado»** y una caja **«Pegar acciones»**, para usar cualquier IA sin servidor.
 - El fichero [skill-jugar-brewfactory.md](skill-jugar-brewfactory.md) explica a cualquier IA cómo leer el estado, qué devolver y con qué criterios jugar. Se le pasa junto al estado.
 - El JSON de acciones puede venir dentro de un bloque de código o con texto alrededor: el juego extrae el objeto.
-- Más adelante, un endpoint HTTP local (`GET /state`, `POST /actions`) que reutilice la misma función de aplicación de acciones.
+- **API HTTP local** para que una IA o cualquier programa juegue sin copiar y pegar (solo con `npm run dev` o `npm run preview`, con la aplicación abierta en el navegador y el interruptor **Conexión API** activado):
+
+| Petición | Qué hace |
+|---|---|
+| `GET /api/estado` | Devuelve el estado para la IA (el mismo JSON que «Copiar estado»). |
+| `POST /api/acciones` | Cuerpo: el JSON de acciones. La interfaz lo aplica (con resaltado y comentario) y la respuesta lista las acciones descartadas. **No resuelve el ciclo.** |
+| `POST /api/paso` | Resuelve un ciclo (la partida debe estar parada o en pausa) y devuelve el estado nuevo. |
+| `GET /api/skill` | Devuelve el skill en Markdown para la IA. |
+
+  El estado vive en el navegador: el servidor solo hace de buzón entre la interfaz y el agente, y cada petición espera (hasta 8 s) a que la interfaz responda. Sin interfaz conectada, responde 503. Si hay varias ventanas abiertas, solo la primera controla la API y las demás muestran 🟠 en el interruptor. Los errores del JSON se devuelven como 400 con un mensaje legible. Un agente juega en bucle: `GET /api/estado` → decide → `POST /api/acciones` → `POST /api/paso`.
+- Las acciones descartadas al aplicar (por una IA, por API o por «IA mode») se conservan y aparecen en `erroresCicloAnterior` del estado siguiente.
 
 ### 9.2 Formato
 - **Estado (salida):** el estado del ciclo actual y del anterior, con reglas resumidas, histórico de OKR, acciones posibles, los errores del ciclo anterior y el **informe del ciclo** (decisiones, sucesos e impacto, §8).
@@ -329,5 +343,5 @@ Los escenarios enlatados reproducen el orden (Gestor frente a Todo Estándar: Jo
 
 ## 12. Pendiente para después
 - Seguir ajustando con ⚙ y `npm run calibrar`.
-- Revisión visual en pantallas pequeñas (el tablero necesita unos 1200 px de ancho).
-- Endpoint HTTP local para la IA (`GET /state`, `POST /actions`).
+- Arrastre táctil (pantallas táctiles) si algún día se necesita.
+- Un modo «auto-juego» que encadene lectura, decisión y paso de una IA sin intervención (hoy lo hace el agente externo con la API).
