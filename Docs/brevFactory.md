@@ -71,7 +71,7 @@ Es una cola de pedidos que el juego genera aleatoriamente y la fábrica debe pro
 |---|---|
 | No hay pedidos en la cola de demanda | −20 % |
 | Por cada pedido **en producción** y **no en retraso** (contador ≥ 0) | +5 % |
-| Por cada pedido de la cola de demanda **en retraso** (contador < 0) | −5 % |
+| Por cada pedido de la cola de demanda **en retraso** (contador < 0) | −8 % (original: −5 %) |
 
 - «En producción» = es el pedido **actual** de una línea activa. Un pedido «siguiente» o aparcado no cuenta.
 - **Sin doble penalización:** un pedido tardío **no terminado** penaliza solo en Cumplimiento. Una vez **terminado**, penaliza solo en Entrega.
@@ -138,13 +138,14 @@ Cada ciclo el jugador asigna a cada muelle activo uno de los pedidos terminados 
 |---|---|
 | Pedido entregado **a tiempo** (contador ≥ 0) | +10 % |
 | Pedido entregado **con retraso** (contador < 0) | 0 % (ni bonifica ni penaliza) |
-| Pedido terminado en stock, **no expedido**, con contador en **[−3, 0)** | −5 % |
-| Ídem, con contador en **[−10, −3)** | −10 % |
-| Ídem, con contador **< −10** | −20 % |
-| Por cada pedido terminado en stock **no expedido** | −5 % (se suma a lo anterior) |
-| Ídem, si hay muelle libre y pedidos candidatos sin asignar | −15 % en vez de −5 % (se suma a los tramos por retraso) |
+| Pedido terminado en stock, **no expedido**, con contador en **[−2, 0)** (retraso leve) | −8 % |
+| Ídem, con contador en **[−6, −2)** (retraso medio) | −16 % |
+| Ídem, con contador **< −6** (retraso grave) | −30 % |
+| Por cada pedido terminado en stock **no expedido** | −8 % (se suma a lo anterior) |
+| Ídem, si hay muelle libre y pedidos candidatos sin asignar | −20 % en vez de −8 % (se suma a los tramos por retraso) |
 
-- Los tramos de retraso se aplican **en cada ciclo**. Los extremos van al tramo más favorable: −3 al de −5 %, −10 al de −10 %.
+- Los tramos de retraso se aplican **en cada ciclo**. Los extremos van al tramo más favorable: −2 al leve, −6 al medio.
+- Los valores de la especificación original eran −5/−10/−20 % con umbrales de 3 y 10 ciclos (y −5/−15 % para «sin expedir»). Los valores actuales endurecen el retraso para que dejarlo todo en Estándar no compense (§11).
 - Solo penalizan los pedidos del stock con contador negativo que **no llegan a un muelle** en ese ciclo.
 - Las penalizaciones por «terminado sin entregar» solo aplican a pedidos que ya estaban terminados al inicio del ciclo.
 - No hay penalizaciones si no hay pedidos terminados.
@@ -152,7 +153,9 @@ Cada ciclo el jugador asigna a cada muelle activo uno de los pedidos terminados 
 
 ## 6. Rentabilidad
 
-`Rentabilidad = 0.25 · Cumplimiento + 0.50 · Productividad + 0.25 · Entrega`
+`Rentabilidad = 0.33 · Cumplimiento + 0.34 · Productividad + 0.33 · Entrega`
+
+(La especificación original usaba 0,25 / 0,50 / 0,25. Los pesos se ajustan en ⚙ y deben sumar 1.)
 
 Se muestra como porcentaje de 0 a 100 %. Es un **indicador aproximado de rentabilidad y coste**: no existe un modelo de costes explícito. La puntuación final de la partida es la **media de la Rentabilidad** de todos los ciclos.
 
@@ -257,6 +260,8 @@ El juego tiene dos interfaces: la UI para personas y una API para una IA.
 ### 9.1 Flujo
 - Botón **IA mode** (solo en pausa): carga un JSON desde archivo y actualiza la pantalla.
 - Además, **«Copiar estado»** y una caja **«Pegar acciones»**, para usar cualquier IA sin servidor.
+- El fichero [skill-jugar-brewfactory.md](skill-jugar-brewfactory.md) explica a cualquier IA cómo leer el estado, qué devolver y con qué criterios jugar. Se le pasa junto al estado.
+- El JSON de acciones puede venir dentro de un bloque de código o con texto alrededor: el juego extrae el objeto.
 - Más adelante, un endpoint HTTP local (`GET /state`, `POST /actions`) que reutilice la misma función de aplicación de acciones.
 
 ### 9.2 Formato
@@ -302,25 +307,27 @@ Estrategias: Todo Estándar, Todo Alta, Todo Baja, Aleatorio, Adaptativo (Alta e
 - Alta pasa de −3 % a **−6 %**: usar Alta cuesta fatiga real.
 - La demanda sube a **1,3 pedidos/ciclo de 75 a 325 botellas** (Estándar ya no basta).
 - La demanda llega en **oleadas** (16 ciclos, amplitud 0,8): un ajuste estático no vale, hay que reaccionar.
+- Pesos de la Rentabilidad **0,33 / 0,34 / 0,33** (decisión del responsable): Cumplimiento y Entrega pesan más y dejar pedidos sin servir sale más caro.
+- **Retrasos ampliados** para penalizar el «todo Estándar»: retraso leve −8 %, medio −16 %, grave −30 % con umbrales de 2 y 6 ciclos; «terminado sin expedir» −8 % (−20 % con muelle libre) y pedido en retraso en Cumplimiento −8 %.
 
 Resultados (48 ciclos, 200 partidas de demanda aleatoria por estrategia):
 
 | Estrategia | Rentabilidad media | Observación |
 |---|---|---|
-| Gestor | 83 % | La mejor: usa Alta en los picos y recupera después. |
-| Todo Estándar | 79 % | Cumplimiento a 0 %: no llega a la demanda. |
-| Mixto (2 líneas en Alta) | 71 % | Productividad agotada. |
-| Adaptativo | 67 % | Alta sostenida en todas las líneas hunde la Productividad. |
-| Adaptativo fino | 64 % | Idem, más suave. |
-| Todo Alta | 50 % | Productividad 0 %. |
-| Aleatorio | 41 % | Sin criterio. |
-| Todo Baja | 31 % | Cumplimiento y productividad a 0 %. |
+| Gestor | 86 % | La mejor: usa Alta en los picos y recupera después. |
+| Mixto (2 líneas en Alta) | 78 % | Productividad agotada, pero sirve la demanda. |
+| Adaptativo | 77 % | Alta sostenida en todas las líneas hunde la Productividad. |
+| Adaptativo fino | 75 % | Ídem, más suave. |
+| Todo Estándar | 68 % | Cumplimiento a 0 % y Entrega al 46 %: no llega a la demanda. |
+| Todo Alta | 63 % | Productividad 0 %. |
+| Aleatorio | 44 % | Sin criterio. |
+| Todo Baja | 38 % | Cumplimiento y productividad a 0 %. |
 
-Los escenarios enlatados reproducen el orden: el Gestor gana en los tres (Jornada tranquila: empata con Estándar; Pico de demanda: 88 %; Entregas urgentes: 79 %).
+Los escenarios enlatados reproducen el orden (Gestor frente a Todo Estándar: Jornada tranquila 93 % vs 85 %, Pico de demanda 92 % vs 82 %, Entregas urgentes 78 % vs 60 %).
 
-**Limitación:** la ventaja del mejor bot sobre Todo Estándar es solo de unos 4 puntos. Los bots no usan todas las palancas (apagar líneas, priorizar con criterios distintos del vencimiento, uso del muelle 2), que es donde una persona o una IA pueden ganar más.
+**Resultado del ajuste:** la ventaja del mejor bot sobre Todo Estándar pasó de unos 4 puntos a **unos 19**. Los bots aún no usan todas las palancas (apagar líneas, priorizar con criterios distintos del vencimiento, uso del muelle 2), que es donde una persona o una IA pueden ganar más.
 
 ## 12. Pendiente para después
-- Seguir ajustando con ⚙ y `npm run calibrar` (por ejemplo, subir el peso de Cumplimiento y Entrega o endurecer los retrasos para penalizar más el «Todo Estándar»).
+- Seguir ajustando con ⚙ y `npm run calibrar`.
 - Revisión visual en pantallas pequeñas (el tablero necesita unos 1200 px de ancho).
 - Endpoint HTTP local para la IA (`GET /state`, `POST /actions`).

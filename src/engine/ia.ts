@@ -107,7 +107,15 @@ export function parsearAcciones(texto: string, base: Estado): ResultadoParseo {
   try {
     json = JSON.parse(texto);
   } catch (err) {
-    return { error: `El texto no es JSON válido: ${(err as Error).message}` };
+    // Las IA suelen envolver el JSON en un bloque ```json … ``` o añadir una frase: se prueba con el primer objeto {…}.
+    const ini = texto.indexOf('{');
+    const fin = texto.lastIndexOf('}');
+    try {
+      if (ini < 0 || fin <= ini) throw err;
+      json = JSON.parse(texto.slice(ini, fin + 1));
+    } catch {
+      return { error: `El texto no es JSON válido: ${(err as Error).message}` };
+    }
   }
   const raiz = json as { acciones?: unknown } | null;
   const obj = (raiz && typeof raiz === 'object' && 'acciones' in raiz ? raiz.acciones : json) as Record<string, unknown> | null;

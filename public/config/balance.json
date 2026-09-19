@@ -20,14 +20,14 @@
     "entrega": 100
   },
   "pesosRentabilidad": {
-    "cumplimiento": 0.25,
-    "productividad": 0.5,
-    "entrega": 0.25
+    "cumplimiento": 0.33,
+    "productividad": 0.34,
+    "entrega": 0.33
   },
   "cumplimiento": {
     "sinDemanda": -20,
     "pedidoEnProduccionATiempo": 5,
-    "pedidoEnRetraso": -5
+    "pedidoEnRetraso": -8
   },
   "productividad": {
     "incompletoEnStockNoActivo": -5,
@@ -35,13 +35,13 @@
   },
   "entrega": {
     "aTiempo": 10,
-    "retrasoLeve": -5,
-    "retrasoMedio": -10,
-    "retrasoGrave": -20,
-    "umbralRetrasoLeve": 3,
-    "umbralRetrasoMedio": 10,
-    "terminadoSinEntregar": -5,
-    "terminadoSinEntregarMuelleLibre": -15
+    "retrasoLeve": -8,
+    "retrasoMedio": -16,
+    "retrasoGrave": -30,
+    "umbralRetrasoLeve": 2,
+    "umbralRetrasoMedio": 6,
+    "terminadoSinEntregar": -8,
+    "terminadoSinEntregarMuelleLibre": -20
   },
   "demanda": {
     "pedidosIniciales": 6,

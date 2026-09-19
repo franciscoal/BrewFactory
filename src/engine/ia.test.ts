@@ -35,6 +35,15 @@ describe('parsearAcciones', () => {
     }
   });
 
+  it('tolera el JSON dentro de un bloque de código o con texto alrededor', () => {
+    const json = '{"lineas":[{"id":1,"velocidad":"alta","actual":"P-1"}]}';
+    for (const texto of ['```json\n' + json + '\n```', 'Aquí tienes:\n' + json + '\nSuerte.']) {
+      const r = parsearAcciones(texto, e);
+      expect('acciones' in r, texto).toBe(true);
+    }
+    expect(parsearAcciones('sin json aquí', e)).toEqual({ error: expect.stringContaining('JSON válido') });
+  });
+
   it('los campos ausentes conservan el valor actual y null vacía el hueco', () => {
     const base = structuredClone(e);
     base.lineas[0].actual = 'P-1';
