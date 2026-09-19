@@ -350,7 +350,7 @@ Estrategias: Todo Estándar, Todo Alta, Todo Baja, Aleatorio, Adaptativo (Alta e
 - Alta pasa de −3 % a **−6 %**: usar Alta cuesta fatiga real.
 - La demanda sube a **1,3 pedidos/ciclo de 75 a 325 botellas** (Estándar ya no basta).
 - La demanda llega en **oleadas** (16 ciclos, amplitud 0,8): un ajuste estático no vale, hay que reaccionar.
-- Pesos de la Rentabilidad **0,33 / 0,34 / 0,33** (decisión del responsable): Cumplimiento y Entrega pesan más y dejar pedidos sin servir sale más caro.
+- Pesos de la Rentabilidad **0,33 / 0,34 / 0,33** (decisión del manual): Cumplimiento y Entrega pesan más y dejar pedidos sin servir sale más caro.
 - **Retrasos ampliados** para penalizar el «todo Estándar»: retraso leve −8 %, medio −16 %, grave −30 % con umbrales de 2 y 6 ciclos; «terminado sin expedir» −8 % (−20 % con muelle libre) y pedido en retraso en Cumplimiento −8 %.
 
 Resultados (48 ciclos, 200 partidas de demanda aleatoria por estrategia):
@@ -369,7 +369,3 @@ Resultados (48 ciclos, 200 partidas de demanda aleatoria por estrategia):
 Los escenarios enlatados reproducen el orden (Gestor frente a Todo Estándar: Jornada tranquila 93 % vs 85 %, Pico de demanda 92 % vs 82 %, Entregas urgentes 78 % vs 60 %).
 
 **Resultado del ajuste:** la ventaja del mejor bot sobre Todo Estándar pasó de unos 4 puntos a **unos 19**. Los bots aún no usan todas las palancas (apagar líneas, priorizar con criterios distintos del vencimiento, uso del muelle 2), que es donde una persona o una IA pueden ganar más.
-
-## 12. Pendiente para después
-- Seguir ajustando con ⚙ y `npm run calibrar`.
-- Piloto automático con una IA de verdad (modelo de lenguaje): ver §9.4. El arrastre táctil y el soporte de móviles y tabletas quedan descartados por ahora.
