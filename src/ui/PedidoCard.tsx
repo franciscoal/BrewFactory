@@ -11,11 +11,12 @@ interface Props {
 }
 
 export function PedidoCard({ pedido: p, arrastrable = false, onQuitar, compacta = false }: Props) {
-  const { vista, setArrastre, arrastre } = useCtx();
+  const { vista, setArrastre, arrastre, resaltado } = useCtx();
   const lineas = vista.lineas.filter((l) => l.actual === p.id || l.siguiente === p.id);
   const asociado = lineas.length > 0;
   const clase = ['card', p.terminado ? 'terminado' : asociado ? 'asociado' : p.producido > 0 ? 'parcial' : ''];
   if (arrastre === p.id) clase.push('arrastrando');
+  if (resaltado?.pedidos.includes(p.id)) clase.push('resaltado');
   const contadorClase = p.contador < 0 ? 'retraso' : p.contador <= 1 ? 'urgente' : '';
 
   return (

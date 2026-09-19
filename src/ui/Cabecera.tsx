@@ -1,6 +1,8 @@
+import { useState } from 'preact/hooks';
 import { BALANCE } from '../engine';
 import { useCtx } from './contexto';
 import { cambiarCicloSegundos, detener, pausar, paso, play } from './juego';
+import { PanelIA } from './PanelIA';
 
 const pct = (v: number) => `${Math.round(v)} %`;
 
@@ -16,6 +18,7 @@ function Kpi({ nombre, valor, grande = false }: { nombre: string; valor: number;
 
 export function Cabecera() {
   const { j, setJ, mostrarInforme, setMostrarInforme } = useCtx();
+  const [iaAbierto, setIaAbierto] = useState(false);
   const { okr } = j.estado;
   const jugando = j.fase === 'jugando';
   const terminado = j.fase === 'terminado';
@@ -44,6 +47,14 @@ export function Cabecera() {
           </button>
           <button class="btn" disabled={jugando || terminado} onClick={() => setJ(paso)} title="Avanza un ciclo">
             ⏭ Paso
+          </button>
+          <button
+            class="btn ia"
+            disabled={jugando || terminado}
+            onClick={() => setIaAbierto(true)}
+            title="Solo con la partida parada o en pausa"
+          >
+            🤖 IA mode
           </button>
         </div>
 
@@ -95,6 +106,7 @@ export function Cabecera() {
           </span>
         </div>
       </div>
+      {iaAbierto && <PanelIA onCerrar={() => setIaAbierto(false)} />}
     </header>
   );
 }

@@ -1,7 +1,7 @@
 import { createContext } from 'preact';
 import { useContext } from 'preact/hooks';
 import type { Estado } from '../engine';
-import type { Juego, Resultado } from './juego';
+import type { Cambios, Juego, Resultado } from './juego';
 
 export interface Contexto {
   j: Juego;
@@ -11,6 +11,9 @@ export interface Contexto {
   /** Id del pedido que se está arrastrando, si hay alguno. */
   arrastre: string | null;
   setArrastre: (id: string | null) => void;
+  /** Elementos que acaba de cambiar la IA; se resaltan unos segundos. */
+  resaltado: Cambios | null;
+  resaltar: (cambios: Cambios) => void;
   /** Toggle «Mostrar estado por ciclo». */
   mostrarInforme: boolean;
   setMostrarInforme: (v: boolean) => void;

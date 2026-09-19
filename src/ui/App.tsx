@@ -7,7 +7,7 @@ import { Muelles, Stock } from './Expediciones';
 import { FinPartida } from './FinPartida';
 import { InformeCiclo } from './InformeCiclo';
 import { juegoNuevo, tick, vistaDe } from './juego';
-import type { Juego, Resultado } from './juego';
+import type { Cambios, Juego, Resultado } from './juego';
 import { Lineas } from './Lineas';
 import { Resultados } from './Resultados';
 
@@ -16,6 +16,8 @@ export function App() {
   const [arrastre, setArrastre] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [mostrarInforme, setMostrarInforme] = useState(false);
+  const [resaltado, setResaltado] = useState<Cambios | null>(null);
+  const temporizadorResaltado = useRef<number>();
   const temporizador = useRef<number>();
 
   // Reloj del ciclo: un tick por segundo mientras se juega.
@@ -33,12 +35,20 @@ export function App() {
     temporizador.current = window.setTimeout(() => setAviso(null), 3500);
   };
 
+  const resaltar = (cambios: Cambios) => {
+    setResaltado(cambios);
+    clearTimeout(temporizadorResaltado.current);
+    temporizadorResaltado.current = window.setTimeout(() => setResaltado(null), 4000);
+  };
+
   const ctx = {
     j,
     setJ,
     vista,
     arrastre,
     setArrastre,
+    resaltado,
+    resaltar,
     mostrarInforme,
     setMostrarInforme,
     hacer: (op: (v: Estado) => Resultado) => {
@@ -57,6 +67,11 @@ export function App() {
         {j.errores.length > 0 && (
           <div class="errores" role="status">
             Acciones descartadas en el último ciclo: {j.errores.join(' · ')}
+          </div>
+        )}
+        {j.comentarioIA && (
+          <div class="comentario-ia" role="status">
+            <b>🤖 Razonamiento de la IA:</b> {j.comentarioIA}
           </div>
         )}
         {mostrarInforme && <InformeCiclo />}

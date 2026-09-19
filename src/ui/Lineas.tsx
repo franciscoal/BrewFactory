@@ -11,8 +11,8 @@ const VELOCIDADES: { id: Velocidad; nombre: string }[] = [
 ];
 
 function LineaPanel({ linea, botellas }: { linea: Linea; botellas: number }) {
-  const { vista, arrastre, setArrastre, hacer, esValida } = useCtx();
-  const pedido = (id: string | null) => vista.pedidos.find((p) => p.id === id);
+  const { vista, arrastre, setArrastre, hacer, esValida, resaltado } = useCtx();
+  const pedido =(id: string | null) => vista.pedidos.find((p) => p.id === id);
   const actual = pedido(linea.actual);
   const siguiente = pedido(linea.siguiente);
   const activa = linea.encendida && actual !== undefined;
@@ -35,7 +35,7 @@ function LineaPanel({ linea, botellas }: { linea: Linea; botellas: number }) {
   };
 
   return (
-    <div class={`linea${linea.encendida ? '' : ' apagada'}${activa ? ' activa' : ''}`}>
+    <div class={`linea${linea.encendida ? '' : ' apagada'}${activa ? ' activa' : ''}${resaltado?.lineas.includes(linea.id) ? ' resaltado' : ''}`}>
       <header class="linea-cab">
         <h3>Línea {linea.id}</h3>
         <span class="estado-linea">{!linea.encendida ? 'apagada' : activa ? 'activa' : 'sin pedido'}</span>

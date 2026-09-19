@@ -22,6 +22,15 @@ export interface Juego {
   totalCiclos: number;
   errores: string[];
   log: EntradaLog[];
+  /** Razonamiento que acompañó a las últimas acciones de la IA (se limpia al resolver el ciclo). */
+  comentarioIA: string | null;
+}
+
+/** Elementos que difieren entre dos configuraciones; sirve para resaltar lo que ha cambiado la IA. */
+export interface Cambios {
+  pedidos: string[];
+  lineas: number[];
+  muelles: number[];
 }
 
 export const planDesde = (e: Estado): Acciones => ({
@@ -54,6 +63,42 @@ export function juegoNuevo(semilla = (Math.random() * 2 ** 31) >>> 0): Juego {
     totalCiclos: 24,
     errores: [],
     log: [],
+    comentarioIA: null,
+  };
+}
+
+/** Compara la configuración de dos estados y lista qué pedidos, líneas y muelles cambian. */
+export function cambiosEntre(antes: Estado, despues: Estado): Cambios {
+  const pedidos = new Set<string>();
+  const lineas: number[] = [];
+  despues.lineas.forEach((n, i) => {
+    const p = antes.lineas[i];
+    if (p.encendida === n.encendida && p.velocidad === n.velocidad && p.actual === n.actual && p.siguiente === n.siguiente) return;
+    lineas.push(n.id);
+    const rol = (l: typeof p, id: string) => (l.actual === id ? 'actual' : l.siguiente === id ? 'siguiente' : null);
+    for (const id of [p.actual, p.siguiente, n.actual, n.siguiente]) {
+      if (id && rol(p, id) !== rol(n, id)) pedidos.add(id);
+    }
+  });
+  const muelles: number[] = [];
+  despues.muelles.forEach((m, i) => {
+    if (m !== antes.muelles[i]) {
+      muelles.push(i);
+      for (const id of [m, antes.muelles[i]]) if (id) pedidos.add(id);
+    }
+  });
+  return { pedidos: [...pedidos], lineas, muelles };
+}
+
+/** Aplica al plan las acciones de una IA (sin resolver el ciclo). Devuelve los avisos de las acciones descartadas. */
+export function aplicarAccionesIA(j: Juego, acciones: Acciones): { juego: Juego; errores: string[]; cambios: Cambios } {
+  const antes = vistaDe(j.estado, j.plan);
+  const despues = structuredClone(j.estado);
+  const errores = aplicarAcciones(despues, acciones);
+  return {
+    juego: { ...j, plan: planDesde(despues), comentarioIA: acciones.comentario ?? null },
+    errores,
+    cambios: cambiosEntre(antes, despues),
   };
 }
 
@@ -68,6 +113,7 @@ export function resolver(j: Juego): Juego {
     plan: planDesde(r.estado),
     errores: r.errores,
     restante: j.cicloSegundos,
+    comentarioIA: null,
     fase: fin ? 'terminado' : j.fase,
     log: [...j.log, { ciclo: r.estado.ciclo, acciones: j.plan, errores: r.errores, informe: r.informe }],
   };

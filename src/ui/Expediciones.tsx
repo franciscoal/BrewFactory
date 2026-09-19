@@ -22,7 +22,7 @@ export function Stock() {
 }
 
 export function Muelles() {
-  const { vista, arrastre, setArrastre, hacer, esValida } = useCtx();
+  const { vista, arrastre, setArrastre, hacer, esValida, resaltado } = useCtx();
   return (
     <section class="panel muelles">
       <header class="panel-cab">
@@ -36,7 +36,7 @@ export function Muelles() {
           return (
             <div
               key={i}
-              class={`muelle${activo ? '' : ' inactivo'}${valido ? ' destino' : ''}${arrastre !== null && !valido ? ' rechazo' : ''}`}
+              class={`muelle${activo ? '' : ' inactivo'}${resaltado?.muelles.includes(i) ? ' resaltado' : ''}${valido ? ' destino' : ''}${arrastre !== null && !valido ? ' rechazo' : ''}`}
               onDragOver={(ev) => {
                 if (valido) ev.preventDefault();
               }}
