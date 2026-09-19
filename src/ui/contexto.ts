@@ -11,6 +11,9 @@ export interface Contexto {
   /** Id del pedido que se está arrastrando, si hay alguno. */
   arrastre: string | null;
   setArrastre: (id: string | null) => void;
+  /** Toggle «Mostrar estado por ciclo». */
+  mostrarInforme: boolean;
+  setMostrarInforme: (v: boolean) => void;
   /** Aplica una operación de edición del plan; si no es válida, muestra el aviso. */
   hacer: (op: (vista: Estado) => Resultado) => void;
   /** Comprueba (sin aplicar) si una operación sería válida; sirve para resaltar destinos. */

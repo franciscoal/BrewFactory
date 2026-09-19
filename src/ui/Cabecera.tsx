@@ -15,7 +15,7 @@ function Kpi({ nombre, valor, grande = false }: { nombre: string; valor: number;
 }
 
 export function Cabecera() {
-  const { j, setJ } = useCtx();
+  const { j, setJ, mostrarInforme, setMostrarInforme } = useCtx();
   const { okr } = j.estado;
   const jugando = j.fase === 'jugando';
   const terminado = j.fase === 'terminado';
@@ -26,9 +26,9 @@ export function Cabecera() {
       <div class="okr">
         <h2>OKR</h2>
         <Kpi nombre="Cumplimiento" valor={okr.cumplimiento} />
-        <Kpi nombre="Productividad" valor={okr.productividad} grande />
+        <Kpi nombre="Productividad" valor={okr.productividad} />
         <Kpi nombre="Entrega" valor={okr.entrega} />
-        <Kpi nombre="Rentabilidad" valor={okr.rentabilidad} />
+        <Kpi nombre="Rentabilidad" valor={okr.rentabilidad} grande />
       </div>
 
       <div class="controles">
@@ -85,6 +85,10 @@ export function Cabecera() {
               onChange={(e) => setJ((x) => ({ ...x, limitar: e.currentTarget.checked }))}
             />
             Limitar ciclos
+          </label>
+          <label class="toggle">
+            <input type="checkbox" checked={mostrarInforme} onChange={(e) => setMostrarInforme(e.currentTarget.checked)} />
+            Mostrar estado por ciclo
           </label>
           <span class="pendientes">
             Ciclos pendientes: <b>{pendientes}</b>

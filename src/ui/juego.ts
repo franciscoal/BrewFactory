@@ -1,5 +1,5 @@
 import { aplicarAcciones, BALANCE, estadoInicial, muelleActivo, step } from '../engine';
-import type { Acciones, Estado, PedidoId, Velocidad } from '../engine';
+import type { Acciones, Estado, Informe, PedidoId, Velocidad } from '../engine';
 
 export type Fase = 'detenido' | 'jugando' | 'pausa' | 'terminado';
 
@@ -7,6 +7,7 @@ export interface EntradaLog {
   ciclo: number;
   acciones: Acciones;
   errores: string[];
+  informe: Informe;
 }
 
 export interface Juego {
@@ -68,7 +69,7 @@ export function resolver(j: Juego): Juego {
     errores: r.errores,
     restante: j.cicloSegundos,
     fase: fin ? 'terminado' : j.fase,
-    log: [...j.log, { ciclo: r.estado.ciclo, acciones: j.plan, errores: r.errores }],
+    log: [...j.log, { ciclo: r.estado.ciclo, acciones: j.plan, errores: r.errores, informe: r.informe }],
   };
 }
 

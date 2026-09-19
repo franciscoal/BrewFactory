@@ -171,28 +171,30 @@ Después llega la resolución del ciclo (§2), que actualiza OKR, stock, contado
 - Botones **Play**, **Pause**, **Stop** y **Paso** (avanza un ciclo en pausa).
 - Campo **Ciclos totales**, contador de **ciclos pendientes** y toggle **«Limitar ciclos»**. Apagado, la partida es infinita y termina con Stop. Encendido, termina al agotar los ciclos.
 - **Tiempo de ciclo**: barra deslizante, por defecto **15 s** (rango 3–60 s).
+- Toggle **«Mostrar estado por ciclo»**: resume en la parte superior las decisiones del ciclo resuelto y su impacto (§8).
 - Al terminar, por Stop o por agotar ciclos, se ofrece **guardar el resultado**.
 
 ## 8. Interfaz
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
-│ OKR: Cumplimiento · PRODUCTIVIDAD (grande) · Entrega               │
-│ ▶ Play  ⏸ Pause  ⏹ Stop  ⏭ Paso  [IA mode]  Ciclos / Limitar        │
+│ OKR: Cumplimiento · Productividad · Entrega · Rentabilidad (grande)│
+│ ▶ Play  ⏸ Pause  ⏹ Stop  ⏭ Paso  [IA mode]  Ciclos / Limitar     │
 ├───────────┬──────────────────────────────┬─────────┬───────┬───────┤
 │ Demanda   │ Línea 1: [Siguiente]⇄[Actual]│ Stock   │Muelle │ Tabla │
-│ comercial │ Línea 2: velocidad ▢▢▢ ⏻     │ exped.  │  1    │ KPI   │
+│ comercial │ Línea 2: velocidad ▢▢▢ ⏻     │ exped.  │  1    │ KPI  │
 │ (tarjetas)│ Línea 3: resultado próximo   │(tarjeta)│Muelle │ por   │
 │           │ Línea 4: ciclo               │         │  2    │ ciclo │
 └───────────┴──────────────────────────────┴─────────┴───────┴───────┘
 ```
 
-- **Panel superior (OKR):** cumplimiento, productividad (en fuente mayor) y entrega. Botones de control. En pausa, botón **IA mode** para cargar el JSON de una IA.
+- **Panel superior (OKR):** cumplimiento, productividad y entrega, y **Rentabilidad en fuente mayor** por ser el indicador total. Botones de control. En pausa, botón **IA mode** para cargar el JSON de una IA.
+- **Estado por ciclo (opcional):** panel bajo la cabecera que resume cada ciclo resuelto. Se activa con el toggle **«Mostrar estado por ciclo»** (ver más abajo).
 - **Izquierda, demanda comercial:** tarjetas arrastrables con cantidad inicial, pendiente, ciclos originales, ciclos pendientes y líneas asociadas. Color: **verde tenue** si están asociadas a una línea, **blanco** si no tienen producción, **amarillo tenue** si están parcialmente producidas y sin línea.
 - **Centro, líneas:** cada línea tiene un panel pequeño a la izquierda (pedido siguiente) y uno mayor a la derecha (pedido actual), tres controles de velocidad apilados y siempre visibles, un botón para intercambiar los pedidos, un interruptor de apagado y un panel inferior con lo que producirá en el próximo ciclo (unidades e impacto en productividad).
 - **Stock de expediciones:** cola de tarjetas arrastrables. Terminados arriba por orden de finalización, incompletos debajo.
 - **Muelles:** dos huecos para tarjetas. Se activan o desactivan según el §5.2.
-- **Panel de resultados:** tabla con una fila por ciclo (Ciclo, Cumplimiento, Productividad, Entrega, Rentabilidad), dos gráficas de líneas (una con los tres OKR y otra solo con Productividad) y, sobre la tabla, un emoji de estado.
+- **Panel de resultados:** tabla con una fila por ciclo (Ciclo, Cumplimiento, Productividad, Entrega, Rentabilidad), dos gráficas de líneas (una con los tres OKR y otra solo con Rentabilidad) y, sobre la tabla, un emoji de estado.
 
 | Productividad | Emoji |
 |---|---|
@@ -200,6 +202,27 @@ Después llega la resolución del ciclo (§2), que actualiza OKR, stock, contado
 | 50–69 % | Neutro |
 | 30–49 % | Preocupado |
 | < 30 % | Enfadado |
+
+### Estado por ciclo
+
+Con el toggle **«Mostrar estado por ciclo»** activado, cada vez que se resuelve un ciclo la parte superior del tablero resume de forma estructurada **qué se decidió y qué efecto tuvo**. El resumen permanece hasta el ciclo siguiente. Es el mismo informe que se incluye en el estado que recibe la IA (§9.2).
+
+| Bloque | Contenido |
+|---|---|
+| **Decisiones** | Lo que cambió el jugador o la IA respecto al ciclo anterior, agrupado por tipo. |
+| **Sucesos** | Lo que ocurrió al resolver el ciclo. |
+| **Impacto** | Para cada OKR, el valor antes y después, y cada efecto con su causa. |
+
+Decisiones, agrupadas:
+- **Pedidos añadidos a producción** (pasan a ser el actual de una línea o quedan en reserva como siguiente).
+- **Pedidos retirados de producción** (liberados de una línea).
+- **Cambios de prioridad** (de activo a reserva y viceversa, mediante el intercambio).
+- **Líneas encendidas o apagadas** y **cambios de velocidad**.
+- **Pedidos asignados a muelle** para su expedición.
+
+Sucesos: botellas producidas por línea, pedidos completados, pedidos expedidos (a tiempo o con retraso) y pedidos nuevos en la demanda.
+
+Impacto: cada efecto indica el OKR, el porcentaje y el motivo. Ejemplos: «Productividad −5 %: línea 2 en velocidad Baja», «Entrega +10 %: P-3 expedido a tiempo», «Cumplimiento −5 %: P-7 en retraso (2 ciclos)». Si el valor llega al tope (0 % o 100 %), se indica que el cambio quedó limitado.
 
 **Interacción:** solo **arrastrar y soltar**. La demo será en remoto y es importante que se vea lo que mueve el ratón.
 
@@ -213,7 +236,7 @@ El juego tiene dos interfaces: la UI para personas y una API para una IA.
 - Más adelante, un endpoint HTTP local (`GET /state`, `POST /actions`) que reutilice la misma función de aplicación de acciones.
 
 ### 9.2 Formato
-- **Estado (salida):** el estado del ciclo actual y del anterior, con reglas resumidas, histórico de OKR, acciones posibles y los errores del ciclo anterior.
+- **Estado (salida):** el estado del ciclo actual y del anterior, con reglas resumidas, histórico de OKR, acciones posibles, los errores del ciclo anterior y el **informe del ciclo** (decisiones, sucesos e impacto, §8).
 - **Acciones (entrada):** **declarativas**, con la configuración deseada completa. Por línea: encendida, velocidad, actual y siguiente (una línea apagada implica ambos vacíos). Por muelle: pedido.
 - Campo opcional **`comentario`** con el razonamiento de la IA, mostrado en un panel.
 - La UI **resalta** lo que ha cambiado la IA.

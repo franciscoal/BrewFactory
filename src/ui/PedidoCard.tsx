@@ -33,7 +33,7 @@ export function PedidoCard({ pedido: p, arrastrable = false, onQuitar, compacta 
         <strong>{p.id}</strong>
         {p.terminado && <span class="etiqueta ok">✔ terminado</span>}
         {lineas.map((l) => (
-          <span key={l.id} class="etiqueta linea">
+          <span key={l.id} class="etiqueta en-linea">
             L{l.id}
             {l.siguiente === p.id ? ' ▸' : ''}
           </span>

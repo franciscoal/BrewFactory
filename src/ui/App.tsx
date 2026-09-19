@@ -5,6 +5,7 @@ import { Ctx } from './contexto';
 import { Demanda } from './Demanda';
 import { Muelles, Stock } from './Expediciones';
 import { FinPartida } from './FinPartida';
+import { InformeCiclo } from './InformeCiclo';
 import { juegoNuevo, tick, vistaDe } from './juego';
 import type { Juego, Resultado } from './juego';
 import { Lineas } from './Lineas';
@@ -14,6 +15,7 @@ export function App() {
   const [j, setJ] = useState<Juego>(() => juegoNuevo());
   const [arrastre, setArrastre] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [mostrarInforme, setMostrarInforme] = useState(false);
   const temporizador = useRef<number>();
 
   // Reloj del ciclo: un tick por segundo mientras se juega.
@@ -37,6 +39,8 @@ export function App() {
     vista,
     arrastre,
     setArrastre,
+    mostrarInforme,
+    setMostrarInforme,
     hacer: (op: (v: Estado) => Resultado) => {
       if (j.fase === 'terminado') return;
       const r = op(vista);
@@ -55,6 +59,7 @@ export function App() {
             Acciones descartadas en el último ciclo: {j.errores.join(' · ')}
           </div>
         )}
+        {mostrarInforme && <InformeCiclo />}
         <main class="tablero">
           <Demanda />
           <Lineas />

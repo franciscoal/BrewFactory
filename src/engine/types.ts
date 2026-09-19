@@ -30,6 +30,38 @@ export interface Okr {
   rentabilidad: number;
 }
 
+export type CategoriaDecision = 'anadidos' | 'retirados' | 'prioridad' | 'lineas' | 'velocidad' | 'muelles';
+export type CategoriaSuceso = 'produccion' | 'completados' | 'expedidos' | 'demanda';
+
+/** Cambio que hizo el jugador o la IA respecto al estado del ciclo anterior. */
+export interface Decision {
+  categoria: CategoriaDecision;
+  texto: string;
+}
+
+/** Algo que ocurrió al resolver el ciclo. */
+export interface Suceso {
+  categoria: CategoriaSuceso;
+  texto: string;
+}
+
+/** Variación de un OKR con su causa. */
+export interface Efecto {
+  okr: 'cumplimiento' | 'productividad' | 'entrega';
+  delta: number;
+  motivo: string;
+}
+
+/** Resumen estructurado de un ciclo: qué se decidió, qué pasó y qué impacto tuvo. */
+export interface Informe {
+  ciclo: number;
+  decisiones: Decision[];
+  sucesos: Suceso[];
+  efectos: Efecto[];
+  antes: Okr;
+  despues: Okr;
+}
+
 export interface Estado {
   ciclo: number;
   semilla: number;
@@ -43,6 +75,8 @@ export interface Estado {
   muelles: (PedidoId | null)[];
   okr: Okr;
   historial: { ciclo: number; okr: Okr }[];
+  /** Informe del último ciclo resuelto (null antes del primero). */
+  ultimoInforme: Informe | null;
 }
 
 /** Acciones declarativas: configuración deseada completa. */

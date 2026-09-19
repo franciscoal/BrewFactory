@@ -192,6 +192,47 @@ h3 {
   z-index: 10;
 }
 
+/* ── Estado por ciclo ─────────────────────────────────── */
+.informe {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  max-height: 190px;
+  overflow-y: auto;
+  padding: 0.5rem 1rem;
+  background: #f8f5ea;
+  border-bottom: 1px solid var(--borde);
+  font-size: 0.8rem;
+}
+
+.informe h3 {
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.informe h4 {
+  margin: 0.35rem 0 0.1rem;
+  font-size: 0.75rem;
+  color: var(--suave);
+}
+
+.informe ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.informe small {
+  font-weight: 400;
+}
+
+.impacto-total {
+  margin: 0.4rem 0 0;
+}
+
+.vacio.izq {
+  text-align: left;
+}
+
 /* ── Tablero ──────────────────────────────────────────── */
 .tablero {
   flex: 1;
@@ -294,7 +335,7 @@ h3 {
   color: #fff;
 }
 
-.etiqueta.linea {
+.etiqueta.en-linea {
   background: #cfe0f7;
 }
 

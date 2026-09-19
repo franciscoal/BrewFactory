@@ -2,12 +2,14 @@ import { aplicarAcciones } from './acciones';
 import { BALANCE } from './balance';
 import { generarDemandaCiclo } from './demanda';
 import { lineaActiva, muelleActivo, pedidosEnProduccion } from './derivados';
-import type { Acciones, Estado, Okr, PedidoId } from './types';
+import { describirDecisiones, NOMBRE_VELOCIDAD } from './informe';
+import type { Acciones, Efecto, Estado, Informe, Okr, Pedido, PedidoId, Suceso } from './types';
 
 export interface ResultadoStep {
   estado: Estado;
   /** Acciones descartadas, en lenguaje legible. */
   errores: string[];
+  informe: Informe;
 }
 
 const limitar = (v: number): number => Math.min(100, Math.max(0, v));
@@ -26,57 +28,70 @@ function penalizacionRetraso(contador: number): number {
 /**
  * Calcula los OKR del ciclo con la configuración resultante de aplicar las acciones y los
  * contadores tal como los veía el jugador (antes de producir, expedir o decrementar).
+ * Devuelve también cada efecto con su causa.
  */
-function calcularOkr(e: Estado): Okr {
+function calcularOkr(e: Estado): { okr: Okr; efectos: Efecto[] } {
+  const efectos: Efecto[] = [];
+  const acum = { cumplimiento: e.okr.cumplimiento, productividad: e.okr.productividad, entrega: e.okr.entrega };
+  const sumar = (okr: Efecto['okr'], delta: number, motivo: string): void => {
+    if (delta === 0) return;
+    acum[okr] += delta;
+    efectos.push({ okr, delta, motivo });
+  };
+
   const enProduccion = pedidosEnProduccion(e);
   const noTerminados = e.pedidos.filter((p) => !p.terminado);
 
   // Cumplimiento
-  let cumplimiento = e.okr.cumplimiento;
-  if (noTerminados.length === 0) cumplimiento += BALANCE.cumplimiento.sinDemanda;
+  if (noTerminados.length === 0) sumar('cumplimiento', BALANCE.cumplimiento.sinDemanda, 'No hay pedidos en la cola de demanda');
   for (const p of noTerminados) {
-    if (p.contador < 0) cumplimiento += BALANCE.cumplimiento.pedidoEnRetraso;
-    else if (enProduccion.has(p.id)) cumplimiento += BALANCE.cumplimiento.pedidoEnProduccionATiempo;
+    if (p.contador < 0) {
+      sumar('cumplimiento', BALANCE.cumplimiento.pedidoEnRetraso, `${p.id} en retraso (${-p.contador} ${-p.contador === 1 ? 'ciclo' : 'ciclos'})`);
+    } else if (enProduccion.has(p.id)) {
+      sumar('cumplimiento', BALANCE.cumplimiento.pedidoEnProduccionATiempo, `${p.id} en producción a tiempo`);
+    }
   }
 
   // Productividad
-  let productividad = e.okr.productividad;
   for (const l of e.lineas) {
-    if (lineaActiva(l)) productividad += BALANCE.velocidades[l.velocidad].productividad;
+    if (lineaActiva(l)) {
+      sumar('productividad', BALANCE.velocidades[l.velocidad].productividad, `Línea ${l.id} en velocidad ${NOMBRE_VELOCIDAD[l.velocidad]}`);
+    }
   }
   for (const p of noTerminados) {
-    if (p.producido > 0 && !enProduccion.has(p.id)) productividad += BALANCE.productividad.incompletoEnStockNoActivo;
+    if (p.producido > 0 && !enProduccion.has(p.id)) {
+      sumar('productividad', BALANCE.productividad.incompletoEnStockNoActivo, `${p.id} incompleto en stock y sin línea activa`);
+    }
   }
   const hayStock = e.pedidos.some((p) => p.producido > 0);
   if (!hayStock && noTerminados.length > 0 && enProduccion.size === 0) {
-    productividad += BALANCE.productividad.sinStockConDemandaSinActivos;
+    sumar('productividad', BALANCE.productividad.sinStockConDemandaSinActivos, 'Sin stock, con demanda y sin pedidos activos');
   }
 
   // Entrega
-  let entrega = e.okr.entrega;
   const enMuelle = new Set(e.muelles.filter((m): m is PedidoId => m !== null));
   const terminados = e.pedidos.filter((p) => p.terminado);
   for (const p of terminados) {
     if (enMuelle.has(p.id)) {
-      if (p.contador >= 0) entrega += BALANCE.entrega.aTiempo;
+      if (p.contador >= 0) sumar('entrega', BALANCE.entrega.aTiempo, `${p.id} expedido a tiempo`);
     } else if (p.contador < 0) {
-      entrega += penalizacionRetraso(p.contador);
+      sumar('entrega', penalizacionRetraso(p.contador), `${p.id} en stock con ${-p.contador} ${-p.contador === 1 ? 'ciclo' : 'ciclos'} de retraso, sin expedir`);
     }
   }
   const sinExpedir = terminados.filter((p) => !enMuelle.has(p.id));
   const muelleLibre = e.muelles.some((m, i) => m === null && muelleActivo(e, i));
-  const porPedido =
-    muelleLibre && sinExpedir.length > 0
-      ? BALANCE.entrega.terminadoSinEntregarMuelleLibre
-      : BALANCE.entrega.terminadoSinEntregar;
-  entrega += porPedido * sinExpedir.length;
+  const conMuelleLibre = muelleLibre && sinExpedir.length > 0;
+  const porPedido = conMuelleLibre ? BALANCE.entrega.terminadoSinEntregarMuelleLibre : BALANCE.entrega.terminadoSinEntregar;
+  for (const p of sinExpedir) {
+    sumar('entrega', porPedido, `${p.id} terminado sin expedir${conMuelleLibre ? ' habiendo muelle libre' : ''}`);
+  }
 
   const okr = {
-    cumplimiento: limitar(cumplimiento),
-    productividad: limitar(productividad),
-    entrega: limitar(entrega),
+    cumplimiento: limitar(acum.cumplimiento),
+    productividad: limitar(acum.productividad),
+    entrega: limitar(acum.entrega),
   };
-  return { ...okr, rentabilidad: rentabilidad(okr) };
+  return { okr: { ...okr, rentabilidad: rentabilidad(okr) }, efectos };
 }
 
 /**
@@ -109,18 +124,22 @@ export function previsionProduccion(e: Estado): Map<number, number> {
 }
 
 /** Paso 3: los muelles expiden los pedidos asignados, que desaparecen del stock y del muelle. */
-function expedir(e: Estado): void {
+function expedir(e: Estado): Pedido[] {
   const expedidos = new Set(e.muelles.filter((m): m is PedidoId => m !== null));
+  const salen = e.pedidos.filter((p) => expedidos.has(p.id));
   e.pedidos = e.pedidos.filter((p) => !expedidos.has(p.id));
   e.muelles = e.muelles.map(() => null);
+  return salen;
 }
 
-/** Paso 4: los pedidos completos pasan a terminados y las líneas avanzan al siguiente. */
-function completar(e: Estado, cicloResuelto: number): void {
+/** Paso 4: los pedidos completos pasan a terminados y las líneas avanzan al siguiente. Devuelve los recién completados. */
+function completar(e: Estado, cicloResuelto: number): Pedido[] {
+  const nuevos: Pedido[] = [];
   for (const p of e.pedidos) {
     if (!p.terminado && p.producido >= p.cantidad) {
       p.terminado = true;
       p.terminadoEnCiclo = cicloResuelto;
+      nuevos.push(p);
     }
   }
   const terminado = new Map(e.pedidos.map((p) => [p.id, p.terminado]));
@@ -131,7 +150,10 @@ function completar(e: Estado, cicloResuelto: number): void {
     }
     if (l.siguiente !== null && terminado.get(l.siguiente)) l.siguiente = null;
   }
+  return nuevos;
 }
+
+const plural = (n: number, singular: string, pl: string): string => `${n} ${n === 1 ? singular : pl}`;
 
 /**
  * Resuelve un ciclo. No muta `previo`.
@@ -141,16 +163,36 @@ export function step(previo: Estado, acciones?: Acciones): ResultadoStep {
   const e = structuredClone(previo);
   const errores = acciones ? aplicarAcciones(e, acciones) : [];
   const cicloResuelto = previo.ciclo + 1;
+  const decisiones = describirDecisiones(previo, e);
+  const sucesos: Suceso[] = [];
 
-  const okr = calcularOkr(e);
-  producir(e);
-  expedir(e);
-  completar(e, cicloResuelto);
+  const { okr, efectos } = calcularOkr(e);
+
+  const actualAntes = new Map(e.lineas.map((l) => [l.id, l.actual]));
+  for (const [id, botellas] of producir(e)) {
+    sucesos.push({ categoria: 'produccion', texto: `Línea ${id}: +${plural(botellas, 'botella', 'botellas')} en ${actualAntes.get(id)}` });
+  }
+  for (const p of expedir(e)) {
+    sucesos.push({
+      categoria: 'expedidos',
+      texto: p.contador >= 0 ? `${p.id} expedido a tiempo` : `${p.id} expedido con retraso (${plural(-p.contador, 'ciclo', 'ciclos')}), sin bonificación`,
+    });
+  }
+  for (const p of completar(e, cicloResuelto)) {
+    sucesos.push({ categoria: 'completados', texto: `${p.id} completado: pasa al stock de expediciones` });
+  }
+
   e.okr = okr;
   for (const p of e.pedidos) p.contador -= 1;
+  const conocidos = new Set(e.pedidos.map((p) => p.id));
   generarDemandaCiclo(e);
+  for (const p of e.pedidos.filter((x) => !conocidos.has(x.id))) {
+    sucesos.push({ categoria: 'demanda', texto: `Nuevo pedido ${p.id}: ${p.cantidad} botellas, ${plural(p.contador, 'ciclo', 'ciclos')}` });
+  }
 
+  const informe: Informe = { ciclo: cicloResuelto, decisiones, sucesos, efectos, antes: previo.okr, despues: okr };
   e.ciclo = cicloResuelto;
   e.historial.push({ ciclo: cicloResuelto, okr });
-  return { estado: e, errores };
+  e.ultimoInforme = informe;
+  return { estado: e, errores, informe };
 }

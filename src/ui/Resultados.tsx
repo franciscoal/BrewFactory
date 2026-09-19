@@ -14,7 +14,7 @@ import { useCtx } from './contexto';
 
 Chart.register(CategoryScale, LinearScale, LineController, LineElement, PointElement, Legend, Tooltip);
 
-const COLORES = { cumplimiento: '#2f7ed8', productividad: '#e08a00', entrega: '#2a9d5c' };
+const COLORES = { cumplimiento: '#2f7ed8', productividad: '#e08a00', entrega: '#2a9d5c', rentabilidad: '#7b3fb5' };
 
 function Grafica({ estado, series }: { estado: Estado; series: (keyof typeof COLORES)[] }) {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -68,7 +68,7 @@ export function Resultados() {
         <h2>Resultados</h2>
       </header>
       <Grafica estado={e} series={['cumplimiento', 'productividad', 'entrega']} />
-      <Grafica estado={e} series={['productividad']} />
+      <Grafica estado={e} series={['rentabilidad']} />
       <div class="emoji" title={`Productividad ${Math.round(e.okr.productividad)} %`}>
         {emoji(e.okr.productividad)}
       </div>

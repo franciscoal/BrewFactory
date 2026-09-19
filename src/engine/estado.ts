@@ -21,6 +21,7 @@ export function estadoInicial(semilla = 1): Estado {
     muelles: [null, null],
     okr,
     historial: [],
+    ultimoInforme: null,
   };
   for (let i = 0; i < BALANCE.demanda.pedidosIniciales; i++) crearPedido(e);
   return e;
