@@ -9,6 +9,7 @@ import { FinPartida } from './FinPartida';
 import { InformeCiclo } from './InformeCiclo';
 import { juegoNuevo, tick, vistaDe } from './juego';
 import type { Cambios, Juego, Resultado } from './juego';
+import { MANUAL, usePiloto } from './piloto';
 import { Lineas } from './Lineas';
 import { Resultados } from './Resultados';
 
@@ -18,6 +19,7 @@ export function App() {
   const [aviso, setAviso] = useState<string | null>(null);
   const [mostrarInforme, setMostrarInforme] = useState(false);
   const [apiActiva, setApiActiva] = useState(true);
+  const [piloto, setPiloto] = useState(MANUAL);
   const [pestana, setPestana] = useState<'fabrica' | 'resultados'>('fabrica');
   const [resaltado, setResaltado] = useState<Cambios | null>(null);
   const temporizadorResaltado = useRef<number>();
@@ -45,6 +47,7 @@ export function App() {
   };
 
   const estadoApi = useConexionApi(apiActiva, j, setJ, resaltar);
+  usePiloto(piloto, j, setJ, resaltar);
 
   const ctx = {
     j,
@@ -54,6 +57,8 @@ export function App() {
     setArrastre,
     resaltado,
     resaltar,
+    piloto,
+    setPiloto,
     apiActiva,
     setApiActiva,
     estadoApi,

@@ -23,6 +23,8 @@ export interface Juego {
   errores: string[];
   /** Acciones descartadas al aplicar el plan de una IA durante este ciclo; pasan a `errores` al resolverlo. */
   erroresAcciones: string[];
+  /** Ciclo en el que el piloto automático ya decidió (para decidir una sola vez por ciclo). */
+  decididoEn: number | null;
   log: EntradaLog[];
   /** Razonamiento que acompañó a las últimas acciones de la IA (se limpia al resolver el ciclo). */
   comentarioIA: string | null;
@@ -65,6 +67,7 @@ export function juegoNuevo(semilla = (Math.random() * 2 ** 31) >>> 0, escenario:
     totalCiclos: 24,
     errores: [],
     erroresAcciones: [],
+    decididoEn: null,
     log: [],
     comentarioIA: null,
   };

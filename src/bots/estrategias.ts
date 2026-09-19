@@ -85,3 +85,15 @@ export const ESTRATEGIAS: Record<string, (semilla: number) => Estrategia> = {
     return planificar(e, (_, id) => (id <= k ? 'alta' : 'estandar'));
   },
 };
+
+/** Nombres para mostrar en la interfaz. El orden es el del selector de piloto. */
+export const NOMBRES_ESTRATEGIA: Record<string, string> = {
+  gestor: 'Gestor',
+  'adaptativo-fino': 'Adaptativo fino',
+  adaptativo: 'Adaptativo',
+  'mixto-2alta': 'Mixto (2 líneas en Alta)',
+  'todo-estandar': 'Todo Estándar',
+  'todo-alta': 'Todo Alta',
+  'todo-baja': 'Todo Baja',
+  aleatorio: 'Aleatorio',
+};

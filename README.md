@@ -58,6 +58,7 @@ Otras funciones de la cabecera:
 - **Escenario**: demanda aleatoria por semilla o uno de los escenarios enlatados (`src/escenarios/`). Se puede cargar uno propio en JSON.
 - **Mostrar estado por ciclo**: resume qué se decidió en cada ciclo y el impacto en los OKR.
 - **▶ ⏸ ⏹ ⏭**: Play, Pause, Stop y Paso (un ciclo manual).
+- **Piloto**: con un bot elegido (Gestor, Todo Estándar…), la partida se juega sola: el bot configura la fábrica al empezar cada ciclo y explica sus decisiones. Con **Manual** juegas tú. Baja el tiempo de ciclo para verlo rápido.
 - **🤖 IA mode**: copia el estado en JSON para una IA y aplica las acciones que devuelva. **Conexión API** lo hace por HTTP.
 - **⚙ Configuración**: ajusta todas las bonificaciones y penalizaciones y las guarda en `public/config/balance.json`.
 - Pestaña **Resultados**: gráficas y tabla por ciclo. Al terminar la partida se puede guardar el resultado en JSON.

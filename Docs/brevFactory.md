@@ -184,10 +184,13 @@ Después llega la resolución del ciclo (§2), que actualiza OKR, stock, contado
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
-│ OKR: Cumplimiento · Productividad · Entrega · RENTABILIDAD (grande) 😀│
-│ ▶ Play  ⏸ Pause  ⏹ Stop  ⏭ Paso  [IA mode]  ⚙  Ciclos / Limitar    │
+│ ▶ ⏸  Cumplim. · Product. · Entrega · RENTABILIDAD · Ciclo · 😀    ⚙ │
+│ ⏹ ⏭                                                                │
+│ [IA mode] Listo  Piloto  Escenario [Cargar…]  Conexión API         │
+│  Limitar ciclos · Ciclos totales · pendientes · Siguiente ciclo ·  │
+│  Mostrar estado por ciclo                     Tiempo de ciclo ───  │
 ├──────────────┬─────────────┐                                       │
-│ 🏭 Fábrica   │ 📈 Resultados│   ← pestañas                          │
+│ 🍺 Fábrica   │ 📈 Resultados│   ← pestañas                          │
 ├───────────┬──┴───────────────────────────┬─────────┬───────────────┤
 │ Demanda   │ Línea 1: [Siguiente]⇄[Actual]│ Stock   │ Muelle 1      │
 │ comercial │ Línea 2: velocidad ▢▢▢ ⏻     │ exped.  │ Muelle 2      │
@@ -197,7 +200,8 @@ Después llega la resolución del ciclo (§2), que actualiza OKR, stock, contado
    Pestaña «Resultados»: gráficas (OKR y Rentabilidad) y, debajo, la tabla por ciclo.
 ```
 
-- **Panel superior:** los marcos de Cumplimiento, Productividad y Entrega, **Rentabilidad en fuente mayor** por ser el indicador total, el **Ciclo** actual (con el mismo aspecto que Entrega, sin color de nivel) y el **emoji de estado**. No lleva rótulo «OKR». Debajo, los controles (§7): botones de icono, **🤖 IA mode** (con texto), **⚙** (configuración, §8.1), el escenario, el tiempo de ciclo y los interruptores.
+- **Cabecera, primera fila:** los cuatro botones de control (▶ ⏸ / ⏹ ⏭) en dos filas a la izquierda, los marcos de Cumplimiento, Productividad y Entrega, **Rentabilidad en fuente mayor** por ser el indicador total, el **Ciclo** actual (con el mismo aspecto que Entrega, sin color de nivel), el **emoji de estado** y, pegado al borde derecho, el botón **⚙** de configuración (§8.1). No lleva rótulo «OKR».
+- **Cabecera, segunda fila** (de izquierda a derecha): **🤖 IA mode** (con texto) y el chip de fase (Listo, En juego…); el selector de **Piloto** (§9.4); el **Escenario** y **Cargar escenario…**; **Conexión API** con su indicador de actividad; el interruptor **Limitar ciclos**, **Ciclos totales** (editable), **Ciclos pendientes** y **Siguiente ciclo** (estos dos con el mismo formato, pero de solo lectura); **Mostrar estado por ciclo**; y, a la derecha de todo, el deslizador de **Tiempo de ciclo**. En pantallas estrechas la fila se parte en varias.
 - **Estilo de los controles:** los interruptores deslizantes son los mismos que encienden y apagan las líneas. El desplegable de escenario tiene el mismo aspecto que el campo «Ciclos totales» (fondo gris, tamaño de letra un punto mayor que su etiqueta).
 - **Iconos:** 📋 Demanda comercial, 🏭 Líneas de producción, 📦 Stock de expediciones, 🚚 Muelles. En las velocidades, 🐌 Baja, 🐕 Estándar y 🐎 Alta (un caballo desbocado: velocidad y descontrol).
 - **Pantallas pequeñas:** hasta 1200 px de ancho el tablero pasa a dos columnas (con las líneas a todo el ancho) y hasta 720 px a una sola, con la página desplazable. El arrastrar y soltar necesita ratón (el arrastre táctil de los navegadores móviles es poco fiable): para la demo, usar un ordenador.
@@ -289,6 +293,14 @@ Es la acción que rompe las reglas. Ejemplos: un pedido inexistente, una velocid
 
 El sistema **descarta solo esa acción**, aplica el resto y muestra un mensaje legible («Línea 3: el pedido P-14 no existe. Se ignora.»). Esa lista viaja en el estado del ciclo siguiente para que la IA se corrija. La UI humana ya impide estas acciones.
 
+### 9.4 Piloto automático
+El selector **Piloto** de la cabecera decide quién juega: **Manual** (una persona) o un **bot** (Gestor, Adaptativo fino, Adaptativo, Mixto, Todo Estándar, Todo Alta, Todo Baja o Aleatorio; son los mismos de `npm run calibrar`).
+
+- Con un bot elegido, al **empezar cada ciclo** (y en el momento de activarlo) el bot configura la fábrica: asigna pedidos por urgencia, fija velocidades y expide los terminados. Se ve cómo se mueven las tarjetas, se resalta lo cambiado y se muestra su **razonamiento** en la franja morada, por ejemplo «Gestor: cartera de 775 botellas; 3 líneas en Alta, 1 línea en Estándar; P-1 es el más urgente (vence en 5 ciclos); expide P-6.».
+- La partida avanza con los controles de siempre (▶ con el tiempo de ciclo, o ⏭ paso a paso). Para verla rápida, bajar el tiempo de ciclo.
+- Se puede intervenir: lo que edite una persona durante el ciclo se respeta hasta el siguiente, y con **Manual** se recupera el control.
+- El piloto automático con una IA real (modelo de lenguaje) es una fase posterior. En ese modo no habría tiempo de ciclo: se pediría la decisión, se esperaría la respuesta y se resolvería el ciclo.
+
 ## 10. Arquitectura técnica
 
 - **Stack:** Vite + TypeScript + Preact + Chart.js. El Canvas solo hace falta para las gráficas.
@@ -343,5 +355,4 @@ Los escenarios enlatados reproducen el orden (Gestor frente a Todo Estándar: Jo
 
 ## 12. Pendiente para después
 - Seguir ajustando con ⚙ y `npm run calibrar`.
-- Arrastre táctil (pantallas táctiles) si algún día se necesita.
-- Un modo «auto-juego» que encadene lectura, decisión y paso de una IA sin intervención (hoy lo hace el agente externo con la API).
+- Piloto automático con una IA de verdad (modelo de lenguaje): ver §9.4. El arrastre táctil y el soporte de móviles y tabletas quedan descartados por ahora.

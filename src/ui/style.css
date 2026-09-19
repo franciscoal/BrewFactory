@@ -47,18 +47,26 @@ h3 {
 /* ── Cabecera ─────────────────────────────────────────── */
 .cabecera {
   display: flex;
-  gap: 1.5rem;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.6rem;
   padding: 0.6rem 1rem;
   background: var(--panel);
   border-bottom: 1px solid var(--borde);
-  flex-wrap: wrap;
 }
 
+/* Primera fila: botones de control, indicadores y ⚙ pegado a la derecha. */
 .okr {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: 0.6rem;
+  width: 100%;
+}
+
+.botones-control {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 0.3rem;
+  margin-right: 0.4rem;
 }
 
 .okr h2 {
@@ -114,11 +122,19 @@ h3 {
   color: var(--texto);
 }
 
+/* Segunda fila: piloto, escenario, conexión API, ciclos y tiempo de ciclo (a la derecha de todo). */
 .controles {
   display: flex;
-  gap: 1.2rem;
-  align-items: center;
+  gap: 0.6rem 0.9rem;
+  align-items: flex-end;
   flex-wrap: wrap;
+}
+
+.controles .interruptor-etiquetado {
+  padding-bottom: 0.4rem;
+}
+
+.campo-tiempo {
   margin-left: auto;
 }
 
@@ -166,8 +182,14 @@ h3 {
 }
 
 .fase {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.9rem;
+  padding: 0 0.8rem;
+  line-height: 1;
   font-weight: 700;
-  padding: 0.1rem 0.5rem;
+  font-size: 0.85rem;
   border-radius: 999px;
   background: #e9e4d6;
 }
@@ -181,6 +203,7 @@ h3 {
 
 /* Campos de la cabecera (Ciclos totales, Escenario): fondo gris y un punto más grandes que su etiqueta. */
 .campo input[type='number'],
+.campo input[type='text'],
 .campo select {
   background: #e6e2d6;
   border: 1px solid var(--borde);
@@ -191,12 +214,21 @@ h3 {
   color: var(--texto);
 }
 
-.campo input[type='number'] {
-  width: 5rem;
+.campo input[type='number'],
+.campo input[type='text'] {
+  width: 4.6rem;
+}
+
+/* Cuadros que solo muestran un valor: mismo formato, pero sin aspecto de editable. */
+.campo input[readonly] {
+  cursor: default;
+  color: var(--suave);
+  background: #ece9df;
 }
 
 .campo select {
-  min-width: 11rem;
+  width: 9.6rem;
+  text-overflow: ellipsis;
   cursor: pointer;
 }
 
@@ -264,6 +296,7 @@ h3 {
 .btn.engranaje {
   font-size: 1.1rem;
   padding: 0.3rem 0.65rem;
+  margin-left: auto;
 }
 
 .pestanas {

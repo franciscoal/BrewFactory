@@ -15,6 +15,9 @@ export interface Contexto {
   /** Elementos que acaba de cambiar la IA; se resaltan unos segundos. */
   resaltado: Cambios | null;
   resaltar: (cambios: Cambios) => void;
+  /** Quién juega: `manual` o el id de un bot (piloto automático). */
+  piloto: string;
+  setPiloto: (id: string) => void;
   /** Conexión con la API HTTP local para la IA. */
   apiActiva: boolean;
   setApiActiva: (v: boolean) => void;
