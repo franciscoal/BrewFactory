@@ -58,17 +58,26 @@ Otras funciones de la cabecera:
 - **Escenario**: demanda aleatoria por semilla o uno de los escenarios enlatados (`src/escenarios/`). Se puede cargar uno propio en JSON.
 - **Mostrar estado por ciclo**: resume qué se decidió en cada ciclo y el impacto en los OKR.
 - **▶ ⏸ ⏹ ⏭**: Play, Pause, Stop y Paso (un ciclo manual).
-- **Piloto**: con un bot elegido (Gestor, Todo Estándar…), la partida se juega sola: el bot configura la fábrica al empezar cada ciclo y explica sus decisiones. Con **Manual** juegas tú. Baja el tiempo de ciclo para verlo rápido.
-- **🤖 IA mode**: copia el estado en JSON para una IA y aplica las acciones que devuelva. **Conexión API** lo hace por HTTP.
+- **Piloto y Modo**: **Usuario** (manual, juegas tú), **Bot** (Gestor, Todo Estándar… juega solo y explica sus decisiones) o **IA** (Gemini; ver más abajo). Con un bot, baja el tiempo de ciclo para verlo rápido.
+- **Conexión API**: permite que un agente externo juegue por HTTP.
 - **⚙ Configuración**: ajusta todas las bonificaciones y penalizaciones y las guarda en `public/config/balance.json`.
 - Pestaña **Resultados**: gráficas y tabla por ciclo. Al terminar la partida se puede guardar el resultado en JSON.
 
 ## Jugar con una IA
 
-Hay dos formas:
+Hay dos formas. Ambas necesitan `npm run dev` o `npm run preview`.
 
-1. **Copiar y pegar** (no necesita nada más): en **🤖 IA mode**, copia el estado, pégalo en una IA junto con [Docs/skill-jugar-brewfactory.md](Docs/skill-jugar-brewfactory.md) y pega en el juego el JSON de acciones que te devuelva.
-2. **API HTTP local** (con `npm run dev` o `npm run preview`): con la aplicación abierta en el navegador y el interruptor **Conexión API** activado, un agente puede jugar solo:
+1. **Piloto IA integrado (Gemini).** Crea el fichero `.env.local` a partir de `.env.example` y pon tu clave:
+
+   ```
+   GEMINI_API_KEY=tu_clave
+   # GEMINI_MODEL=gemini-2.5-flash   (opcional; identificadores vigentes en https://ai.google.dev/gemini-api/docs/models)
+   ```
+
+   Reinicia el servidor y elige **Piloto → IA**. La clave solo la usa el servidor local y `.env.local` no se sube a git. Con la IA no hay tiempo de ciclo:
+   - **Autónomo**: pulsa ▶ y la IA juega sola (pide la decisión, la aplica, resuelve el ciclo y repite). Usa «Limitar ciclos» para acotar las peticiones.
+   - **Paso a paso**: ⏭ pide la decisión a la IA; otra pulsación la aplica; la siguiente resuelve el ciclo y pide la próxima. **Ver respuesta** muestra el JSON recibido.
+2. **Agente externo por la API HTTP.** Con la aplicación abierta en el navegador y el interruptor **Conexión API** activado, un agente puede jugar solo:
 
 ```bash
 curl -s http://localhost:5173/api/estado                      # estado para la IA
@@ -84,10 +93,10 @@ curl -s http://localhost:5173/api/skill                       # instrucciones pa
 | Ruta | Contenido |
 |---|---|
 | `src/engine/` | Motor del juego, sin dependencias de la interfaz: `step(estado, acciones)`, reglas, informe por ciclo, conector IA y escenarios. |
-| `src/ui/` | Interfaz (Preact): paneles, arrastrar y soltar, configuración, modo IA. |
+| `src/ui/` | Interfaz (Preact): paneles, arrastrar y soltar, configuración, pilotos (bots e IA). |
 | `src/bots/` | Estrategias automáticas y simulador usados para calibrar. |
 | `src/escenarios/` | Escenarios enlatados en JSON. |
-| `servidor/` | API HTTP local para la IA (`servidor/api.ts`), montada por Vite en desarrollo y en `preview`. |
+| `servidor/` | Lado servidor, montado por Vite en desarrollo y en `preview`: API HTTP para agentes externos (`api.ts`) y cliente de Gemini (`gemini.ts`). |
 | `public/config/balance.json` | **Cifras del juego** (fuente única). |
 | `src/config/balance-original.json` | Cifras de la especificación original, usadas por los tests y por «Restaurar originales». |
 | `scripts/calibrar.ts` | Script de calibración. |

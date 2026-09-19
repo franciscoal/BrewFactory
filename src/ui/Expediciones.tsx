@@ -5,7 +5,9 @@ import { PedidoCard } from './PedidoCard';
 
 export function Stock() {
   const { vista } = useCtx();
-  const stock = stockExpediciones(vista);
+  // Un pedido asignado a un muelle sale de la cola (así no se puede asignar dos veces). Si al final no se expide, vuelve.
+  const enMuelle = new Set(vista.muelles.filter((m) => m !== null));
+  const stock = stockExpediciones(vista).filter((p) => !enMuelle.has(p.id));
   return (
     <section class="panel stock">
       <header class="panel-cab">
@@ -54,7 +56,7 @@ export function Muelles() {
                 </p>
               )}
               {activo && !pedido && <p class="hueco-vacio">Suelta un pedido terminado</p>}
-              {activo && pedido && <PedidoCard pedido={pedido} compacta onQuitar={() => hacer((v) => opMuelle(v, i, null))} />}
+              {activo && pedido && <PedidoCard pedido={pedido} compacta arrastrable onQuitar={() => hacer((v) => opMuelle(v, i, null))} />}
             </div>
           );
         })}

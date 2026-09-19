@@ -4,8 +4,8 @@ import { Configuracion } from './Configuracion';
 import { useCtx } from './contexto';
 import { Interruptor } from './Interruptor';
 import { cambiarCicloSegundos, detener, pausar, paso, play } from './juego';
-import { PanelIA } from './PanelIA';
-import { PILOTOS } from './piloto';
+import { MODOS, TIPOS_PILOTO } from './piloto';
+import type { TipoPiloto } from './piloto';
 import { SelectorEscenario } from './SelectorEscenario';
 
 const pct = (v: number) => `${Math.round(v)} %`;
@@ -50,19 +50,23 @@ function CampoLectura({ etiqueta, valor, titulo }: { etiqueta: string; valor: st
 const NOMBRE_FASE = { detenido: 'Listo', jugando: 'En juego', pausa: 'En pausa', terminado: 'Terminada' } as const;
 
 export function Cabecera() {
-  const { j, setJ, mostrarInforme, setMostrarInforme, apiActiva, setApiActiva, estadoApi, piloto, setPiloto } = useCtx();
-  const [iaAbierto, setIaAbierto] = useState(false);
+  const { j, setJ, mostrarInforme, setMostrarInforme, apiActiva, setApiActiva, estadoApi, tipoPiloto, setTipoPiloto, modo, setModo, ia } = useCtx();
   const [configAbierta, setConfigAbierta] = useState(false);
   const { okr } = j.estado;
   const jugando = j.fase === 'jugando';
   const terminado = j.fase === 'terminado';
   const pendientes = j.limitar ? Math.max(0, j.totalCiclos - j.estado.ciclo) : '∞';
 
+  // Con la IA no hay tiempo de ciclo: en «autónomo» juega sola con ▶; en «paso a paso» se avanza solo con ⏭.
+  const esIA = tipoPiloto === 'ia';
+  const iaPaso = esIA && modo === 'paso';
+  const iaAutonomo = esIA && modo === 'autonomo';
+
   return (
     <header class="cabecera">
       <div class="okr">
         <div class="botones-control">
-          <button class="btn icono primario" disabled={jugando || terminado} onClick={() => setJ(play)} title="Play" aria-label="Play">
+          <button class="btn icono primario" disabled={jugando || terminado || iaPaso} onClick={() => setJ(play)} title="Play" aria-label="Play">
             ▶
           </button>
           <button class="btn icono" disabled={!jugando} onClick={() => setJ(pausar)} title="Pause" aria-label="Pause">
@@ -71,8 +75,14 @@ export function Cabecera() {
           <button class="btn icono" disabled={terminado} onClick={() => setJ(detener)} title="Stop" aria-label="Stop">
             ⏹
           </button>
-          <button class="btn icono" disabled={jugando || terminado} onClick={() => setJ(paso)} title="Paso: avanza un ciclo" aria-label="Paso">
-            ⏭
+          <button
+            class="btn icono"
+            disabled={iaPaso ? ia.solicitud.pensando || terminado : jugando || terminado || iaAutonomo}
+            onClick={() => (iaPaso ? ia.avanzar() : setJ(paso))}
+            title={iaPaso ? ia.etiquetaPaso : 'Paso: avanza un ciclo'}
+            aria-label={iaPaso ? ia.etiquetaPaso : 'Paso'}
+          >
+            {iaPaso && ia.solicitud.pensando ? '⏳' : '⏭'}
           </button>
         </div>
         <Kpi nombre="Cumplimiento" valor={okr.cumplimiento} />
@@ -89,22 +99,24 @@ export function Cabecera() {
       </div>
 
       <div class="controles">
-        <button
-          class="btn ia"
-          disabled={jugando || terminado}
-          onClick={() => setIaAbierto(true)}
-          title="Solo con la partida parada o en pausa"
-        >
-          🤖 IA mode
-        </button>
         <span class="fase">{NOMBRE_FASE[j.fase]}</span>
 
-        <label class="campo" title="Quién juega: una persona o un bot en piloto automático">
+        <label class="campo" title="Quién juega: una persona, un bot o una IA">
           Piloto
-          <select value={piloto} onChange={(e) => setPiloto(e.currentTarget.value)}>
-            {PILOTOS.map((p) => (
+          <select value={tipoPiloto} onChange={(e) => setTipoPiloto(e.currentTarget.value as TipoPiloto)}>
+            {TIPOS_PILOTO.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.nombre}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label class="campo" title="Cómo juega el piloto elegido">
+          Modo
+          <select value={modo} disabled={MODOS[tipoPiloto].length < 2} onChange={(e) => setModo(e.currentTarget.value)}>
+            {MODOS[tipoPiloto].map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.nombre}
               </option>
             ))}
           </select>
@@ -140,21 +152,24 @@ export function Cabecera() {
           />
         </label>
         <CampoLectura etiqueta="Ciclos pendientes" valor={pendientes} />
-        <CampoLectura etiqueta="Siguiente ciclo" valor={`${j.restante} s`} titulo="Tiempo que falta para resolver el ciclo" />
-        <Interruptor marcado={mostrarInforme} onCambio={setMostrarInforme} etiqueta="Mostrar estado por ciclo" />
-
-        <label class="campo campo-tiempo">
-          Tiempo de ciclo: <b>{j.cicloSegundos} s</b>
+        <CampoLectura
+          etiqueta="Siguiente ciclo"
+          valor={esIA ? '—' : `${j.restante} s`}
+          titulo={esIA ? 'Con la IA no hay tiempo de ciclo: se espera su respuesta' : 'Tiempo que falta para resolver el ciclo'}
+        />
+        <label class="campo campo-tiempo" title={esIA ? 'No se usa con el piloto IA' : undefined}>
+          Tiempo de ciclo: <b>{esIA ? '—' : `${j.cicloSegundos} s`}</b>
           <input
             type="range"
             min={BALANCE.cicloSegundosRango.min}
             max={BALANCE.cicloSegundosRango.max}
             value={j.cicloSegundos}
+            disabled={esIA}
             onInput={(e) => setJ((x) => cambiarCicloSegundos(x, Number(e.currentTarget.value)))}
           />
         </label>
+        <Interruptor marcado={mostrarInforme} onCambio={setMostrarInforme} etiqueta="Mostrar estado por ciclo" />
       </div>
-      {iaAbierto && <PanelIA onCerrar={() => setIaAbierto(false)} />}
       {configAbierta && <Configuracion onCerrar={() => setConfigAbierta(false)} />}
     </header>
   );

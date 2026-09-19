@@ -9,9 +9,14 @@ import { FinPartida } from './FinPartida';
 import { InformeCiclo } from './InformeCiclo';
 import { juegoNuevo, tick, vistaDe } from './juego';
 import type { Cambios, Juego, Resultado } from './juego';
-import { MANUAL, usePiloto } from './piloto';
+import { consultarIA } from './ia';
+import type { DisponibilidadIA } from './ia';
+import { MANUAL, modoPorDefecto, usePiloto } from './piloto';
+import type { TipoPiloto } from './piloto';
 import { Lineas } from './Lineas';
+import { Razonamiento } from './Razonamiento';
 import { Resultados } from './Resultados';
+import { useControlIA } from './useControlIA';
 
 export function App() {
   const [j, setJ] = useState<Juego>(() => juegoNuevo());
@@ -19,7 +24,9 @@ export function App() {
   const [aviso, setAviso] = useState<string | null>(null);
   const [mostrarInforme, setMostrarInforme] = useState(false);
   const [apiActiva, setApiActiva] = useState(true);
-  const [piloto, setPiloto] = useState(MANUAL);
+  const [tipoPiloto, setTipoPiloto] = useState<TipoPiloto>('usuario');
+  const [modo, setModo] = useState(MANUAL);
+  const [iaDisponible, setIaDisponible] = useState<DisponibilidadIA>({ disponible: false, modelo: null });
   const [pestana, setPestana] = useState<'fabrica' | 'resultados'>('fabrica');
   const [resaltado, setResaltado] = useState<Cambios | null>(null);
   const temporizadorResaltado = useRef<number>();
@@ -47,7 +54,13 @@ export function App() {
   };
 
   const estadoApi = useConexionApi(apiActiva, j, setJ, resaltar);
-  usePiloto(piloto, j, setJ, resaltar);
+  usePiloto(tipoPiloto === 'bot' ? modo : MANUAL, j, setJ, resaltar);
+  const ia = useControlIA(tipoPiloto === 'ia', tipoPiloto === 'ia' && modo === 'autonomo', j, setJ, resaltar);
+
+  // ¿Tiene el servidor la clave de la IA? Se vuelve a consultar al elegir el piloto IA (por si se acaba de configurar).
+  useEffect(() => {
+    consultarIA().then(setIaDisponible);
+  }, [tipoPiloto === 'ia']);
 
   const ctx = {
     j,
@@ -57,8 +70,15 @@ export function App() {
     setArrastre,
     resaltado,
     resaltar,
-    piloto,
-    setPiloto,
+    tipoPiloto,
+    setTipoPiloto: (tipo: TipoPiloto) => {
+      setTipoPiloto(tipo);
+      setModo(modoPorDefecto(tipo));
+    },
+    modo,
+    setModo,
+    ia,
+    iaDisponible,
     apiActiva,
     setApiActiva,
     estadoApi,
@@ -82,11 +102,7 @@ export function App() {
             Acciones descartadas en el último ciclo: {j.errores.join(' · ')}
           </div>
         )}
-        {j.comentarioIA && (
-          <div class="comentario-ia" role="status">
-            <b>🤖 Razonamiento de la IA:</b> {j.comentarioIA}
-          </div>
-        )}
+        <Razonamiento />
         {mostrarInforme && <InformeCiclo />}
         <nav class="pestanas" role="tablist">
           {(['fabrica', 'resultados'] as const).map((p) => (

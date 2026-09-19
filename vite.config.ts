@@ -2,13 +2,16 @@ import { existsSync, writeFileSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { resolve } from 'node:path';
 import preact from '@preact/preset-vite';
+import { loadEnv } from 'vite';
 import type { Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
 import { crearApi } from './servidor/api.ts';
+import { geminiDesdeEntorno } from './servidor/gemini.ts';
 
 /** Monta la API para la IA (servidor/api.ts) bajo /api en el servidor de desarrollo y en `vite preview`. */
-function apiParaIA(): Plugin {
-  const api = crearApi();
+function apiParaIA(env: Record<string, string>): Plugin {
+  // La clave de Gemini se lee de .env.local en el servidor; nunca se expone al navegador.
+  const api = crearApi({ ia: geminiDesdeEntorno(env) });
   return {
     name: 'brewfactory-api-ia',
     configureServer: (servidor) => void servidor.middlewares.use('/api', (req, res, siguiente) => void api.manejador(req, res, siguiente)),
@@ -50,9 +53,9 @@ function guardarConfiguracion(): Plugin {
   };
 }
 
-export default defineConfig({
-  plugins: [preact(), guardarConfiguracion(), apiParaIA()],
+export default defineConfig(({ mode }) => ({
+  plugins: [preact(), guardarConfiguracion(), apiParaIA(loadEnv(mode, process.cwd(), ''))],
   // Guardar la configuración no debe recargar la página (se perdería la partida en curso).
   server: { port: 5173, watch: { ignored: ['**/public/config/**'] } },
   test: { environment: 'node', include: ['src/**/*.test.ts', 'servidor/**/*.test.ts'] },
-});
+}));

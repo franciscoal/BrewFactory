@@ -130,7 +130,7 @@ Es una cola de producto con dos tipos de entrada:
 | Muelle 1 | Siempre. |
 | Muelle 2 | Con **3 o más líneas activas**. |
 
-Cada ciclo el jugador asigna a cada muelle activo uno de los pedidos terminados del stock. Puede dejar los muelles vacíos. Si el muelle 2 se desactiva con un pedido asignado, la asignación se cancela **sin penalización**.
+Cada ciclo el jugador asigna a cada muelle activo uno de los pedidos terminados del stock. Puede dejar los muelles vacíos. En pantalla, **un pedido asignado a un muelle desaparece de la cola del stock** (así no se puede asignar dos veces). Si se arrastra otro pedido a un muelle ocupado, **sustituye** al que había, y todo pedido que finalmente no se expide (por sustitución, por ✕ o porque el muelle 2 se cierra) **vuelve a la cola del stock**. Las tarjetas de un muelle también se pueden arrastrar al otro. Si el muelle 2 se desactiva con un pedido asignado, la asignación se cancela **sin penalización**.
 
 ### 5.3 Entrega (0–100 %, arranca en 100 %)
 
@@ -173,7 +173,7 @@ Se muestra como porcentaje de 0 a 100 %. Es un **indicador aproximado de rentabi
 Después llega la resolución del ciclo (§2), que actualiza OKR, stock, contadores y demanda.
 
 **Control de partida:**
-- Botones **▶ Play**, **⏸ Pause**, **⏹ Stop** y **⏭ Paso** (avanza un ciclo en pausa). Solo llevan icono; el texto aparece al pasar el ratón.
+- Botones **▶ Play**, **⏸ Pause**, **⏹ Stop** y **⏭ Paso** (avanza un ciclo en pausa). Solo llevan icono; el texto aparece al pasar el ratón. Con el piloto IA cambian de significado (§9.4).
 - Campo **Ciclos totales**, contador de **ciclos pendientes** e interruptor **«Limitar ciclos»**. Apagado, la partida es infinita y termina con Stop. Encendido, termina al agotar los ciclos.
 - **Tiempo de ciclo**: barra deslizante, por defecto **15 s** (rango 3–60 s). A su derecha, el tiempo que falta para el ciclo siguiente.
 - Interruptor **«Mostrar estado por ciclo»**: resume en la parte superior las decisiones del ciclo resuelto y su impacto (§8).
@@ -186,9 +186,9 @@ Después llega la resolución del ciclo (§2), que actualiza OKR, stock, contado
 ┌────────────────────────────────────────────────────────────────────┐
 │ ▶ ⏸  Cumplim. · Product. · Entrega · RENTABILIDAD · Ciclo · 😀    ⚙ │
 │ ⏹ ⏭                                                                │
-│ [IA mode] Listo  Piloto  Escenario [Cargar…]  Conexión API         │
-│  Limitar ciclos · Ciclos totales · pendientes · Siguiente ciclo ·  │
-│  Mostrar estado por ciclo                     Tiempo de ciclo ───  │
+│ Listo Piloto Modo Escenario [Cargar…] Conexión API                 │
+│  Limitar · Ciclos totales · pendientes · Siguiente · Tiempo ─── ·  │
+│  Mostrar estado por ciclo                                          │
 ├──────────────┬─────────────┐                                       │
 │ 🍺 Fábrica   │ 📈 Resultados│   ← pestañas                          │
 ├───────────┬──┴───────────────────────────┬─────────┬───────────────┤
@@ -201,7 +201,8 @@ Después llega la resolución del ciclo (§2), que actualiza OKR, stock, contado
 ```
 
 - **Cabecera, primera fila:** los cuatro botones de control (▶ ⏸ / ⏹ ⏭) en dos filas a la izquierda, los marcos de Cumplimiento, Productividad y Entrega, **Rentabilidad en fuente mayor** por ser el indicador total, el **Ciclo** actual (con el mismo aspecto que Entrega, sin color de nivel), el **emoji de estado** y, pegado al borde derecho, el botón **⚙** de configuración (§8.1). No lleva rótulo «OKR».
-- **Cabecera, segunda fila** (de izquierda a derecha): **🤖 IA mode** (con texto) y el chip de fase (Listo, En juego…); el selector de **Piloto** (§9.4); el **Escenario** y **Cargar escenario…**; **Conexión API** con su indicador de actividad; el interruptor **Limitar ciclos**, **Ciclos totales** (editable), **Ciclos pendientes** y **Siguiente ciclo** (estos dos con el mismo formato, pero de solo lectura); **Mostrar estado por ciclo**; y, a la derecha de todo, el deslizador de **Tiempo de ciclo**. En pantallas estrechas la fila se parte en varias.
+- **Cabecera, segunda fila** (de izquierda a derecha): el chip de fase (Listo, En juego…); los desplegables **Piloto** y **Modo** (§9.4); el **Escenario** y **Cargar escenario…**; **Conexión API** con su indicador de actividad; el interruptor **Limitar ciclos**, **Ciclos totales** (editable), **Ciclos pendientes** y **Siguiente ciclo** (estos dos con el mismo formato, pero de solo lectura), el deslizador de **Tiempo de ciclo** y, a continuación, **Mostrar estado por ciclo**. En pantallas estrechas la fila se parte en varias.
+- **Franja de razonamiento:** bajo la cabecera, muestra el razonamiento de quien juega (bot, agente externo o IA). Con el piloto IA indica además el estado de la petición y lleva el botón **Ver respuesta** (§9.4).
 - **Estilo de los controles:** los interruptores deslizantes son los mismos que encienden y apagan las líneas. El desplegable de escenario tiene el mismo aspecto que el campo «Ciclos totales» (fondo gris, tamaño de letra un punto mayor que su etiqueta).
 - **Iconos:** 📋 Demanda comercial, 🏭 Líneas de producción, 📦 Stock de expediciones, 🚚 Muelles. En las velocidades, 🐌 Baja, 🐕 Estándar y 🐎 Alta (un caballo desbocado: velocidad y descontrol).
 - **Pantallas pequeñas:** hasta 1200 px de ancho el tablero pasa a dos columnas (con las líneas a todo el ancho) y hasta 720 px a una sola, con la página desplazable. El arrastrar y soltar necesita ratón (el arrastre táctil de los navegadores móviles es poco fiable): para la demo, usar un ordenador.
@@ -263,24 +264,22 @@ Impacto: cada efecto indica el OKR, el porcentaje y el motivo. Ejemplos: «Produ
 
 ## 9. Conector IA
 
-El juego tiene dos interfaces: la UI para personas y una API para una IA.
+El juego tiene dos interfaces: la UI para personas y una API para una IA. Una IA puede jugar de dos maneras: desde la propia aplicación con el **piloto IA** (§9.4, usa Gemini) o desde fuera, con la **API HTTP local** de este apartado.
 
 ### 9.1 Flujo
-- Botón **IA mode** (solo en pausa): carga un JSON desde archivo y actualiza la pantalla.
-- Además, **«Copiar estado»** y una caja **«Pegar acciones»**, para usar cualquier IA sin servidor.
-- El fichero [skill-jugar-brewfactory.md](skill-jugar-brewfactory.md) explica a cualquier IA cómo leer el estado, qué devolver y con qué criterios jugar. Se le pasa junto al estado.
+- El fichero [skill-jugar-brewfactory.md](skill-jugar-brewfactory.md) explica a cualquier IA cómo leer el estado, qué devolver y con qué criterios jugar. El piloto IA se lo envía como instrucciones de sistema; a un agente externo se le pasa junto al estado (o lo descarga de `GET /api/skill`).
 - El JSON de acciones puede venir dentro de un bloque de código o con texto alrededor: el juego extrae el objeto.
-- **API HTTP local** para que una IA o cualquier programa juegue sin copiar y pegar (solo con `npm run dev` o `npm run preview`, con la aplicación abierta en el navegador y el interruptor **Conexión API** activado):
+- **API HTTP local** para que una IA o cualquier programa juegue (solo con `npm run dev` o `npm run preview`, con la aplicación abierta en el navegador y el interruptor **Conexión API** activado):
 
 | Petición | Qué hace |
 |---|---|
-| `GET /api/estado` | Devuelve el estado para la IA (el mismo JSON que «Copiar estado»). |
+| `GET /api/estado` | Devuelve el estado para la IA (JSON con reglas, pedidos, líneas, muelles, informe del ciclo anterior y errores). |
 | `POST /api/acciones` | Cuerpo: el JSON de acciones. La interfaz lo aplica (con resaltado y comentario) y la respuesta lista las acciones descartadas. **No resuelve el ciclo.** |
 | `POST /api/paso` | Resuelve un ciclo (la partida debe estar parada o en pausa) y devuelve el estado nuevo. |
 | `GET /api/skill` | Devuelve el skill en Markdown para la IA. |
 
   El estado vive en el navegador: el servidor solo hace de buzón entre la interfaz y el agente, y cada petición espera (hasta 8 s) a que la interfaz responda. Sin interfaz conectada, responde 503. Si hay varias ventanas abiertas, solo la primera controla la API y las demás muestran 🟠 en el interruptor. Los errores del JSON se devuelven como 400 con un mensaje legible. Un agente juega en bucle: `GET /api/estado` → decide → `POST /api/acciones` → `POST /api/paso`.
-- Las acciones descartadas al aplicar (por una IA, por API o por «IA mode») se conservan y aparecen en `erroresCicloAnterior` del estado siguiente.
+- Las acciones descartadas al aplicar (por el piloto IA o por la API) se conservan y aparecen en `erroresCicloAnterior` del estado siguiente.
 
 ### 9.2 Formato
 - **Estado (salida):** el estado del ciclo actual y del anterior, con reglas resumidas, histórico de OKR, acciones posibles, los errores del ciclo anterior y el **informe del ciclo** (decisiones, sucesos e impacto, §8).
@@ -293,13 +292,28 @@ Es la acción que rompe las reglas. Ejemplos: un pedido inexistente, una velocid
 
 El sistema **descarta solo esa acción**, aplica el resto y muestra un mensaje legible («Línea 3: el pedido P-14 no existe. Se ignora.»). Esa lista viaja en el estado del ciclo siguiente para que la IA se corrija. La UI humana ya impide estas acciones.
 
-### 9.4 Piloto automático
-El selector **Piloto** de la cabecera decide quién juega: **Manual** (una persona) o un **bot** (Gestor, Adaptativo fino, Adaptativo, Mixto, Todo Estándar, Todo Alta, Todo Baja o Aleatorio; son los mismos de `npm run calibrar`).
+### 9.4 Piloto y modo
+Dos desplegables de la cabecera deciden quién juega y cómo:
 
-- Con un bot elegido, al **empezar cada ciclo** (y en el momento de activarlo) el bot configura la fábrica: asigna pedidos por urgencia, fija velocidades y expide los terminados. Se ve cómo se mueven las tarjetas, se resalta lo cambiado y se muestra su **razonamiento** en la franja morada, por ejemplo «Gestor: cartera de 775 botellas; 3 líneas en Alta, 1 línea en Estándar; P-1 es el más urgente (vence en 5 ciclos); expide P-6.».
-- La partida avanza con los controles de siempre (▶ con el tiempo de ciclo, o ⏭ paso a paso). Para verla rápida, bajar el tiempo de ciclo.
-- Se puede intervenir: lo que edite una persona durante el ciclo se respeta hasta el siguiente, y con **Manual** se recupera el control.
-- El piloto automático con una IA real (modelo de lenguaje) es una fase posterior. En ese modo no habría tiempo de ciclo: se pediría la decisión, se esperaría la respuesta y se resolvería el ciclo.
+| Piloto | Modo | Comportamiento |
+|---|---|---|
+| **Usuario** | Manual | Juega una persona, arrastrando (el modo de siempre). |
+| **Bot** | Gestor, Adaptativo fino, Adaptativo, Mixto, Todo Estándar, Todo Alta, Todo Baja, Aleatorio | Un bot de `npm run calibrar` juega solo, con el tiempo de ciclo. |
+| **IA** | Autónomo | Con ▶ la IA juega sola, sin tiempo de ciclo. |
+| **IA** | Paso a paso | Con ⏭ se avanza de decisión en decisión (ver abajo). |
+
+**Bots.** Al empezar cada ciclo (y al activarlo) el bot configura la fábrica: asigna pedidos por urgencia, fija velocidades y expide los terminados. Se ve cómo se mueven las tarjetas, se resalta lo cambiado y la franja de razonamiento explica la decisión, por ejemplo «Gestor: cartera de 775 botellas; 3 líneas en Alta, 1 línea en Estándar; P-1 es el más urgente (vence en 5 ciclos); expide P-6.». La partida avanza con ▶ (con el tiempo de ciclo) o con ⏭. Lo que edite una persona durante el ciclo se respeta hasta el siguiente, y con **Usuario** se recupera el control.
+
+**IA (Gemini).** El servidor local envía a Gemini el estado de la partida (con el skill como instrucciones de sistema) y recibe las acciones como JSON estructurado. La clave nunca llega al navegador (§10). Con la IA **no hay tiempo de ciclo**: el deslizador y «Siguiente ciclo» quedan deshabilitados, porque se espera la respuesta del modelo.
+
+- **Autónomo:** al pulsar ▶ se repite sin intervención: pedir la decisión (la franja muestra «La IA está pensando…») → aplicarla en la interfaz (con resaltado) → una pausa breve de 1,5 s para verla → resolver el ciclo → siguiente petición. ⏸ y ⏹ lo detienen (la respuesta que llegue tarde se descarta). «Limitar ciclos» pone el límite de peticiones. Si la IA falla, la partida queda en pausa con el error a la vista.
+- **Paso a paso:** ▶ está deshabilitado y ⏭ hace en cada pulsación lo siguiente (su texto emergente lo indica):
+  1. **Pedir la decisión** a la IA y esperar la respuesta. La franja muestra su razonamiento y el estado «pendiente», sin tocar la fábrica.
+  2. **Aplicar** la decisión en la interfaz: se mueven las tarjetas y se resalta lo cambiado.
+  3. **Resolver el ciclo** (con la actualización del estado y los OKR) y **pedir la decisión siguiente**. Se vuelve al punto 2 cuando llega la respuesta.
+- **Ver respuesta:** el botón de la franja abre una ventana con el JSON que devolvió nuestra API (`POST /api/ia/decidir`): las acciones, el modelo, la latencia, los reintentos, los tokens usados y, en `respuestaCruda`, el texto exacto del modelo.
+- **Errores:** si Gemini devuelve un JSON inválido, el servidor repite la petición una vez indicándole el fallo. Otros errores (clave incorrecta, modelo inexistente, límite de peticiones, sin conexión) se muestran con una pista; no se cambia en silencio a otro piloto. En «paso a paso», ⏭ reintenta.
+- **Configuración:** crear `.env.local` (a partir de `.env.example`) con `GEMINI_API_KEY` y, si se quiere, `GEMINI_MODEL`. Sin clave, la franja lo indica al elegir el piloto IA.
 
 ## 10. Arquitectura técnica
 
@@ -308,6 +322,7 @@ El selector **Piloto** de la cabecera decide quién juega: **Manual** (una perso
 - **Entidad única `Pedido`:** la cola de demanda y el stock de expediciones son vistas filtradas de una misma lista.
 - **Semilla** en el generador de demanda y **escenarios «enlatados»** para la demo.
 - **Guardado de partida:** semilla, escenario, acciones por ciclo y tabla de KPI, exportable. Permite reproducir la partida y comparar humano contra IA.
+- **Clave de la IA solo en el servidor:** `GEMINI_API_KEY` se lee de `.env.local` (fuera de git) en el proceso de Vite. El navegador solo habla con `/api/ia/decidir`, que llama a Gemini (`generateContent` con salida JSON estructurada, cabecera `x-goog-api-key`). El cliente (`servidor/gemini.ts`) se prueba con respuestas simuladas; la lógica de conversación (`src/ui/controlIA.ts`) no depende de React y también se prueba aislada.
 - **Fichero único de balance** (`public/config/balance.json`) con todas las cifras (porcentajes, capacidades, umbrales, demanda), editable desde el botón ⚙ (§8.1) y sin tocar la lógica. Los valores de la especificación original se conservan en `src/config/balance-original.json`; los tests de reglas usan estos últimos para no depender del ajuste.
 
 ## 11. Escenarios y calibración

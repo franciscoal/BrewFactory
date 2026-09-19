@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { resolve } from 'node:path';
+import { ErrorGemini, leerSkill } from './gemini.ts';
+import type { Gemini } from './gemini.ts';
 
 /**
  * API HTTP local para que una IA (o cualquier programa) juegue a BrewFactory.
@@ -40,6 +42,10 @@ export interface ResultadoInterfaz {
 }
 
 export interface OpcionesApi {
+  /** Cliente de la IA (Gemini). Sin él, `/api/ia/*` responde que no está configurada. */
+  ia?: Gemini | null;
+  /** Instrucciones de sistema para la IA. Por defecto, el skill. */
+  sistemaIA?: () => string;
   /** Tiempo máximo que espera una petición del agente a que la interfaz responda. */
   esperaMs?: number;
   /** Tiempo sin señales tras el cual se considera desconectada la interfaz. */
@@ -53,6 +59,8 @@ export function crearApi(opciones: OpcionesApi = {}) {
   const esperaMs = opciones.esperaMs ?? 8000;
   const conexionMs = opciones.conexionMs ?? 4000;
   const rutaSkill = opciones.rutaSkill ?? resolve('Docs/skill-jugar-brewfactory.md');
+  const ia = opciones.ia ?? null;
+  const sistemaIA = opciones.sistemaIA ?? (() => leerSkill(rutaSkill));
 
   let estado: unknown = null;
   let vistoEn = 0;
@@ -150,6 +158,25 @@ export function crearApi(opciones: OpcionesApi = {}) {
           return responder(res, 200, readFileSync(rutaSkill, 'utf8'), 'text/markdown; charset=utf-8');
         } catch {
           return responder(res, 404, { error: 'No se encuentra el fichero del skill.' });
+        }
+      }
+
+      // ── IA (Gemini): la interfaz pide una decisión con el estado ─────────
+      if (metodo === 'GET' && ruta === '/ia/estado') {
+        return responder(res, 200, { disponible: ia !== null, modelo: ia?.modelo ?? null });
+      }
+      if (metodo === 'POST' && ruta === '/ia/decidir') {
+        if (!ia) {
+          return responder(res, 503, {
+            error: 'La IA no está configurada: crea el fichero .env.local con GEMINI_API_KEY=tu_clave y reinicia el servidor.',
+          });
+        }
+        const estadoPartida = JSON.parse(await leerCuerpo(req));
+        try {
+          return responder(res, 200, { ok: true, ...(await ia.decidir(estadoPartida, sistemaIA())) });
+        } catch (err) {
+          if (err instanceof ErrorGemini) return responder(res, err.estado === 0 ? 504 : 502, { error: err.message, estadoGemini: err.estado });
+          throw err;
         }
       }
 

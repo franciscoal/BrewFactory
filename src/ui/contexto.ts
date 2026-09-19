@@ -2,6 +2,9 @@ import { createContext } from 'preact';
 import { useContext } from 'preact/hooks';
 import type { Estado } from '../engine';
 import type { EstadoApi } from './conexionApi';
+import type { DisponibilidadIA } from './ia';
+import type { TipoPiloto } from './piloto';
+import type { ControlIAUi } from './useControlIA';
 import type { Cambios, Juego, Resultado } from './juego';
 
 export interface Contexto {
@@ -15,9 +18,14 @@ export interface Contexto {
   /** Elementos que acaba de cambiar la IA; se resaltan unos segundos. */
   resaltado: Cambios | null;
   resaltar: (cambios: Cambios) => void;
-  /** Quién juega: `manual` o el id de un bot (piloto automático). */
-  piloto: string;
-  setPiloto: (id: string) => void;
+  /** Quién juega (Usuario, Bot o IA) y cómo (manual, un bot concreto, o autónomo / paso a paso para la IA). */
+  tipoPiloto: TipoPiloto;
+  setTipoPiloto: (tipo: TipoPiloto) => void;
+  modo: string;
+  setModo: (modo: string) => void;
+  /** Estado de la conversación con la IA y su control. */
+  ia: ControlIAUi;
+  iaDisponible: DisponibilidadIA;
   /** Conexión con la API HTTP local para la IA. */
   apiActiva: boolean;
   setApiActiva: (v: boolean) => void;

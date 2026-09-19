@@ -178,7 +178,5 @@ Reglas de juego en este modo: `POST /api/paso` solo funciona con la partida **pa
 
 ## Cómo lo usa la persona
 
-1. En el juego, con la partida parada o en **Pause**, pulsa **🤖 IA mode**.
-2. **Copiar estado** y pégalo en la conversación con la IA junto a este skill.
-3. Pega en el cuadro **Acciones de la IA** el JSON que devuelva, o cárgalo desde un archivo, y pulsa **Aplicar acciones**.
-4. El juego resalta lo que ha cambiado la IA y muestra su `comentario`. Pulsa **Paso** (o **Play**) para resolver el ciclo y repite.
+- **Piloto IA integrado (Gemini):** en el juego, elegir **Piloto → IA**. Este documento se envía solo como instrucciones de sistema. En **Autónomo**, ▶ hace que juegue sola; en **Paso a paso**, ⏭ pide, aplica y resuelve por turnos. Requiere `GEMINI_API_KEY` en `.env.local`.
+- **Agente externo:** cualquier IA con acceso HTTP sigue el bucle de «Si juegas por la API HTTP» (arriba), con la aplicación abierta y el interruptor **Conexión API** activado.

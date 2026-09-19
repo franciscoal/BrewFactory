@@ -27,11 +27,13 @@ async function interfaz(h: Awaited<ReturnType<typeof arrancar>>, responder: (p: 
   return pendientes;
 }
 
-afterEach(async () => {
+async function cerrarTodo() {
   cerrarApi?.();
   await new Promise<void>((ok) => (servidor ? servidor.close(() => ok()) : ok()));
   servidor = undefined;
-});
+}
+
+afterEach(cerrarTodo);
 
 describe('API para la IA', () => {
   it('sin interfaz conectada responde 503', async () => {
@@ -108,6 +110,41 @@ describe('API para la IA', () => {
     expect(skill.status).toBe(200);
     expect(await skill.text()).toContain('jugar-brewfactory');
     expect((await h.pedir('/nada')).status).toBe(404);
+  });
+
+  it('la IA no configurada responde 503 con instrucciones; configurada, decide con el estado y el skill', async () => {
+    const sin = await arrancar();
+    expect(await (await sin.pedir('/ia/estado')).json()).toEqual({ disponible: false, modelo: null });
+    const r503 = await sin.post('/ia/decidir', { ciclo: 1 });
+    expect(r503.status).toBe(503);
+    expect((await r503.json()).error).toContain('GEMINI_API_KEY');
+    await cerrarTodo();
+
+    const recibido: unknown[] = [];
+    const ia = {
+      modelo: 'falso-1',
+      decidir: async (estado: unknown, sistema: string) => {
+        recibido.push(estado, sistema);
+        return { acciones: { lineas: [], muelles: [] }, comentario: 'ok', respuestaCruda: '{}', modelo: 'falso-1', latenciaMs: 5, intentos: 1 };
+      },
+    };
+    const con = await arrancar({ ia, sistemaIA: () => 'SISTEMA' });
+    expect(await (await con.pedir('/ia/estado')).json()).toEqual({ disponible: true, modelo: 'falso-1' });
+    const r = await con.post('/ia/decidir', { ciclo: 7 });
+    expect(r.status).toBe(200);
+    expect(await r.json()).toMatchObject({ ok: true, comentario: 'ok', modelo: 'falso-1', latenciaMs: 5 });
+    expect(recibido).toEqual([{ ciclo: 7 }, 'SISTEMA']);
+  });
+
+  it('los errores de Gemini llegan como 502, y los de red como 504', async () => {
+    const { ErrorGemini } = await import('./gemini');
+    for (const [estadoGemini, esperado] of [[429, 502], [0, 504]] as const) {
+      const h = await arrancar({ ia: { modelo: 'm', decidir: async () => { throw new ErrorGemini('fallo de prueba', estadoGemini); } } });
+      const r = await h.post('/ia/decidir', {});
+      expect(r.status).toBe(esperado);
+      expect(await r.json()).toMatchObject({ error: 'fallo de prueba', estadoGemini });
+      await cerrarTodo();
+    }
   });
 
   it('si hay varias interfaces abiertas, solo la primera controla la API', async () => {
