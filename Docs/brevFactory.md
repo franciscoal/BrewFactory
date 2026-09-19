@@ -201,7 +201,7 @@ Después llega la resolución del ciclo (§2), que actualiza OKR, stock, contado
 ```
 
 - **Cabecera, primera fila:** los cuatro botones de control (▶ ⏸ / ⏹ ⏭) en dos filas a la izquierda, los marcos de Cumplimiento, Productividad y Entrega, **Rentabilidad en fuente mayor** por ser el indicador total, el **Ciclo** actual (con el mismo aspecto que Entrega, sin color de nivel), el **emoji de estado** y, pegado al borde derecho, el botón **⚙** de configuración (§8.1). No lleva rótulo «OKR».
-- **Cabecera, segunda fila** (de izquierda a derecha): el chip de fase, con colores suaves (**Listo** azul, **En juego** anaranjado, **En pausa** gris, **Terminada** verde); los desplegables **Piloto** y **Modo** (§9.4); el **Escenario** y **Cargar escenario…**; **Conexión API** con su indicador de actividad; el interruptor **Limitar ciclos**, **Ciclos totales** (editable), **Ciclos pendientes** y **Siguiente ciclo** (estos dos con el mismo formato, pero de solo lectura), el deslizador de **Tiempo de ciclo** y, a continuación, **Mostrar estado por ciclo**. En pantallas estrechas la fila se parte en varias.
+- **Cabecera, segunda fila** (de izquierda a derecha): el chip de fase, con colores suaves (**Listo** azul, **En juego** anaranjado, **En pausa** gris, **Terminada** verde); los desplegables **Piloto** y **Modo** (§9.4); el **Escenario**; **Conexión API** con su indicador de actividad; el interruptor **Limitar ciclos**, **Ciclos totales** (editable), **Ciclos pendientes** y **Siguiente ciclo** (estos dos con el mismo formato, pero de solo lectura), el deslizador de **Tiempo de ciclo** y, a continuación, **Mostrar estado por ciclo**. En pantallas estrechas la fila se parte en varias.
 - **Franja de razonamiento:** bajo la cabecera, muestra el razonamiento de quien juega (bot, agente externo o IA). Con el piloto IA indica además el estado de la petición y lleva el botón **Ver respuesta** (§9.4).
 - **Estilo de los controles:** los interruptores deslizantes son los mismos que encienden y apagan las líneas. El desplegable de escenario tiene el mismo aspecto que el campo «Ciclos totales» (fondo gris, tamaño de letra un punto mayor que su etiqueta).
 - **Iconos:** 📋 Demanda comercial, 🏭 Líneas de producción, 📦 Stock de expediciones, 🚚 Muelles. En las velocidades, 🐌 Baja, 🐕 Estándar y 🐎 Alta (un caballo desbocado: velocidad y descontrol).
@@ -330,7 +330,7 @@ Dos desplegables de la cabecera deciden quién juega y cómo:
 ## 11. Escenarios y calibración
 
 ### Escenarios enlatados
-Ficheros JSON en `src/escenarios/` con pedidos iniciales y llegadas programadas por ciclo. Se eligen en la cabecera (**Escenario**) antes de empezar, o se cargan desde un archivo propio con **Cargar escenario…**. Al agotarse el guion pueden seguir con demanda aleatoria (`aleatoriaTrasGuion`). Incluidos:
+Ficheros JSON en `src/escenarios/` con pedidos iniciales y llegadas programadas por ciclo. Se eligen en la cabecera (**Escenario**) antes de empezar. La carga de un escenario propio desde archivo (**Cargar escenario…**) está implementada pero **oculta** por ahora (constante `MOSTRAR_CARGA_ESCENARIO` en `SelectorEscenario.tsx`). Al agotarse el guion pueden seguir con demanda aleatoria (`aleatoriaTrasGuion`). Incluidos:
 
 | Escenario | Qué muestra |
 |---|---|

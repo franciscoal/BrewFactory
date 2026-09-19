@@ -7,6 +7,9 @@ import { juegoNuevo } from './juego';
 
 const ALEATORIO = '__aleatorio__';
 
+/** El botón «Cargar escenario…» está oculto por ahora (no es útil para la demo). Poner a `true` para volver a mostrarlo. */
+const MOSTRAR_CARGA_ESCENARIO = false;
+
 /** Elige la demanda de la partida. Solo se puede cambiar antes de empezar (ciclo 0). */
 export function SelectorEscenario() {
   const { j, setJ } = useCtx();
@@ -46,10 +49,12 @@ export function SelectorEscenario() {
           ))}
         </select>
       </label>
-      <label class={`btn archivo${editable ? '' : ' desactivado'}`}>
-        Cargar escenario…
-        <input type="file" accept=".json,application/json" disabled={!editable} onChange={(e) => cargar(e.currentTarget.files?.[0])} />
-      </label>
+      {MOSTRAR_CARGA_ESCENARIO && (
+        <label class={`btn archivo${editable ? '' : ' desactivado'}`}>
+          Cargar escenario…
+          <input type="file" accept=".json,application/json" disabled={!editable} onChange={(e) => cargar(e.currentTarget.files?.[0])} />
+        </label>
+      )}
       {error && (
         <span class="neg" role="alert">
           {error}

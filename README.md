@@ -55,8 +55,7 @@ npx tsx scripts/calibrar.ts 48 200 --config=otro-balance.json   # probar otro fi
 
 Otras funciones de la cabecera:
 
-- **Escenario**: demanda aleatoria por semilla o uno de los escenarios enlatados (`src/escenarios/`). Se puede cargar uno propio en JSON.
-- **Mostrar estado por ciclo**: resume qué se decidió en cada ciclo y el impacto en los OKR.
+- **Escenario**: demanda aleatoria por semilla o uno de los escenarios enlatados (`src/escenarios/`).- **Mostrar estado por ciclo**: resume qué se decidió en cada ciclo y el impacto en los OKR.
 - **▶ ⏸ ⏹ ⏭**: Play, Pause, Stop y Paso (un ciclo manual).
 - **Piloto y Modo**: **Usuario** (manual, juegas tú), **Bot** (Gestor, Todo Estándar… juega solo y explica sus decisiones) o **IA** (Gemini; ver más abajo). Con un bot, baja el tiempo de ciclo para verlo rápido.
 - **Conexión API**: permite que un agente externo juegue por HTTP.
