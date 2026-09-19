@@ -16,6 +16,7 @@ function conFetch(respuestas: Response[]) {
     clave: 'clave-secreta',
     modelo: 'modelo-x',
     baseUrl: 'http://gemini.local/',
+    esperar: async () => undefined,
     fetch: (async (url: string, init: RequestInit) => {
       llamadas.push({ url, init });
       return respuestas.shift()!;
@@ -68,13 +69,29 @@ describe('cliente de Gemini', () => {
       [429, /límite de peticiones/],
     ];
     for (const [estado, pista] of casos) {
-      const { cliente } = conFetch([respuesta('detalle de Google', estado)]);
+      // Los errores pasajeros (429) se reintentan; los demás fallan a la primera.
+      const { cliente } = conFetch([respuesta('detalle de Google', estado), respuesta('detalle de Google', estado), respuesta('detalle de Google', estado)]);
       const error = await cliente.decidir({}, 's').catch((e) => e as ErrorGemini);
       expect(error).toBeInstanceOf(ErrorGemini);
       expect((error as ErrorGemini).estado).toBe(estado);
       expect((error as ErrorGemini).message).toMatch(pista);
       expect((error as ErrorGemini).message).toContain('detalle de Google');
     }
+  });
+
+  it('reintenta solo los errores pasajeros (alta demanda) y lo refleja en los intentos', async () => {
+    const { cliente, llamadas } = conFetch([respuesta('high demand', 503), respuesta('high demand', 503), respuesta(JSON.stringify(acciones))]);
+    const r = await cliente.decidir({}, 's');
+    expect(r.intentos).toBe(3);
+    expect(llamadas).toHaveLength(3);
+
+    const definitivo = conFetch([respuesta('x', 503), respuesta('x', 503), respuesta('x', 503), respuesta(JSON.stringify(acciones))]);
+    await expect(definitivo.cliente.decidir({}, 's')).rejects.toThrow(/503/);
+    expect(definitivo.llamadas).toHaveLength(3);
+
+    const noReintenta = conFetch([respuesta('modelo inexistente', 404), respuesta(JSON.stringify(acciones))]);
+    await expect(noReintenta.cliente.decidir({}, 's')).rejects.toThrow(/404/);
+    expect(noReintenta.llamadas).toHaveLength(1);
   });
 
   it('avisa si Gemini no devuelve texto o bloquea la petición', async () => {
@@ -102,7 +119,7 @@ describe('configuración', () => {
   it('sin clave no hay cliente; con clave usa el modelo por defecto o el indicado', () => {
     expect(geminiDesdeEntorno({})).toBeNull();
     expect(geminiDesdeEntorno({ GEMINI_API_KEY: '  ' })).toBeNull();
-    expect(geminiDesdeEntorno({ GEMINI_API_KEY: 'k' })?.modelo).toBe('gemini-2.5-flash');
+    expect(geminiDesdeEntorno({ GEMINI_API_KEY: 'k' })?.modelo).toBe('gemini-3.6-flash');
     expect(geminiDesdeEntorno({ GEMINI_API_KEY: 'k', GEMINI_MODEL: 'otro' })?.modelo).toBe('otro');
   });
 

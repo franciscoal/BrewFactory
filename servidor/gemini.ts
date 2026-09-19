@@ -13,6 +13,8 @@ export interface ConfigGemini {
   baseUrl?: string;
   timeoutMs?: number;
   fetch?: typeof fetch;
+  /** Espera entre reintentos (solo para pruebas). */
+  esperar?: (ms: number) => Promise<void>;
 }
 
 export interface DecisionIA {
@@ -23,7 +25,7 @@ export interface DecisionIA {
   respuestaCruda: string;
   modelo: string;
   latenciaMs: number;
-  /** 2 si hubo que repetir la petición por una respuesta no válida. */
+  /** Peticiones hechas a Gemini: más de 1 si hubo que repetir por un error pasajero o una respuesta no válida. */
   intentos: number;
   uso?: unknown;
 }
@@ -91,8 +93,13 @@ interface RespuestaGemini {
   error?: { message?: string };
 }
 
+const ESTADOS_TRANSITORIOS = new Set([429, 500, 502, 503, 504]);
+const REINTENTOS_TRANSITORIOS = 2;
+const ESPERA_BASE_MS = 2000;
+
 export function crearGemini(cfg: ConfigGemini): Gemini {
   const llamar = cfg.fetch ?? fetch;
+  const esperar = cfg.esperar ?? ((ms: number) => new Promise<void>((ok) => setTimeout(ok, ms)));
   const base = (cfg.baseUrl ?? 'https://generativelanguage.googleapis.com').replace(/\/+$/, '');
   const timeoutMs = cfg.timeoutMs ?? 90_000;
 
@@ -147,22 +154,37 @@ export function crearGemini(cfg: ConfigGemini): Gemini {
     async decidir(estado, sistema) {
       const inicio = Date.now();
       let aviso: string | undefined;
-      for (let intento = 1; ; intento++) {
-        const { texto, uso } = await pedir(estado, sistema, aviso);
+      let intentos = 0;
+      let transitorios = 0;
+      let malformadas = 0;
+      for (;;) {
+        intentos++;
+        let respuesta: { texto: string; uso?: unknown };
         try {
-          const acciones = JSON.parse(texto) as Record<string, unknown>;
+          respuesta = await pedir(estado, sistema, aviso);
+        } catch (err) {
+          // «Alta demanda», límite momentáneo o error del servidor de Google: se reintenta con espera creciente.
+          if (err instanceof ErrorGemini && ESTADOS_TRANSITORIOS.has(err.estado) && transitorios < REINTENTOS_TRANSITORIOS) {
+            transitorios++;
+            await esperar(ESPERA_BASE_MS * transitorios);
+            continue;
+          }
+          throw err;
+        }
+        try {
+          const acciones = JSON.parse(respuesta.texto) as Record<string, unknown>;
           if (acciones === null || typeof acciones !== 'object' || !Array.isArray(acciones.lineas)) throw new Error('falta la lista "lineas"');
           return {
             acciones,
             comentario: typeof acciones.comentario === 'string' ? acciones.comentario : undefined,
-            respuestaCruda: texto,
+            respuestaCruda: respuesta.texto,
             modelo: cfg.modelo,
             latenciaMs: Date.now() - inicio,
-            intentos: intento,
-            uso,
+            intentos,
+            uso: respuesta.uso,
           };
         } catch (err) {
-          if (intento >= 2) throw new ErrorGemini(`La respuesta de Gemini no es un JSON de acciones válido: ${(err as Error).message}.`, 200);
+          if (++malformadas >= 2) throw new ErrorGemini(`La respuesta de Gemini no es un JSON de acciones válido: ${(err as Error).message}.`, 200);
           aviso = `Tu respuesta anterior no era válida (${(err as Error).message}). Responde solo con el JSON pedido.`;
         }
       }
@@ -170,9 +192,11 @@ export function crearGemini(cfg: ConfigGemini): Gemini {
   };
 }
 
-/** Crea el cliente a partir de las variables de entorno, o `null` si no hay clave. */
+export const MODELO_POR_DEFECTO = 'gemini-3.6-flash';
+
+/** Crea el cliente a partir de las variables de entorno, o `null` si no hay clave (la aplicación arranca igualmente). */
 export function geminiDesdeEntorno(env: Record<string, string | undefined>): Gemini | null {
   const clave = env.GEMINI_API_KEY?.trim();
   if (!clave) return null;
-  return crearGemini({ clave, modelo: env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash', baseUrl: env.GEMINI_BASE_URL?.trim() || undefined });
+  return crearGemini({ clave, modelo: env.GEMINI_MODEL?.trim() || MODELO_POR_DEFECTO, baseUrl: env.GEMINI_BASE_URL?.trim() || undefined });
 }

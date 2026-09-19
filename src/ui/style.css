@@ -194,6 +194,27 @@ h3 {
   background: #e9e4d6;
 }
 
+/* Colores suaves por fase: Listo azul, En juego anaranjado, En pausa gris, Terminada verde. */
+.fase-detenido {
+  background: #dbe9fa;
+  color: #245088;
+}
+
+.fase-jugando {
+  background: #fde8c4;
+  color: #8a5300;
+}
+
+.fase-pausa {
+  background: #e6e2d6;
+  color: #5c5647;
+}
+
+.fase-terminado {
+  background: #d7f0df;
+  color: #1f6b3d;
+}
+
 .campo {
   display: flex;
   flex-direction: column;

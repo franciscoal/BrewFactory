@@ -67,9 +67,10 @@ export function Razonamiento() {
   if (!iaDisponible.disponible && !p && !s.pensando) {
     return (
       <div class="comentario-ia error-ia" role="alert">
-        <b>🤖 IA no configurada:</b> crea el fichero <code>.env.local</code> con <code>GEMINI_API_KEY=tu_clave</code> y reinicia el servidor (
-        <code>npm run dev</code>).
-        {s.error && <> {s.error}</>}
+        <b>🤖 IA no disponible.</b>{' '}
+        <small>
+          No se encuentra <code>GEMINI_API_KEY</code>: crea <code>.env.local</code> con la clave y reinicia el servidor.
+        </small>
       </div>
     );
   }

@@ -99,7 +99,7 @@ export function Cabecera() {
       </div>
 
       <div class="controles">
-        <span class="fase">{NOMBRE_FASE[j.fase]}</span>
+        <span class={`fase fase-${j.fase}`}>{NOMBRE_FASE[j.fase]}</span>
 
         <label class="campo" title="Quién juega: una persona, un bot o una IA">
           Piloto

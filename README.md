@@ -71,10 +71,10 @@ Hay dos formas. Ambas necesitan `npm run dev` o `npm run preview`.
 
    ```
    GEMINI_API_KEY=tu_clave
-   # GEMINI_MODEL=gemini-2.5-flash   (opcional; identificadores vigentes en https://ai.google.dev/gemini-api/docs/models)
+   # GEMINI_MODEL=gemini-3.6-flash   (opcional, es el valor por defecto; identificadores vigentes en https://ai.google.dev/gemini-api/docs/models)
    ```
 
-   Reinicia el servidor y elige **Piloto → IA**. La clave solo la usa el servidor local y `.env.local` no se sube a git. Con la IA no hay tiempo de ciclo:
+   Reinicia el servidor y elige **Piloto → IA**. La clave solo la usa el servidor local y `.env.local` no se sube a git (no la pongas en `.env.example`, que sí se versiona). Sin clave la aplicación arranca igual y, al elegir la IA, muestra «IA no disponible». Con la IA no hay tiempo de ciclo, y cada decisión tarda unos segundos:
    - **Autónomo**: pulsa ▶ y la IA juega sola (pide la decisión, la aplica, resuelve el ciclo y repite). Usa «Limitar ciclos» para acotar las peticiones.
    - **Paso a paso**: ⏭ pide la decisión a la IA; otra pulsación la aplica; la siguiente resuelve el ciclo y pide la próxima. **Ver respuesta** muestra el JSON recibido.
 2. **Agente externo por la API HTTP.** Con la aplicación abierta en el navegador y el interruptor **Conexión API** activado, un agente puede jugar solo:

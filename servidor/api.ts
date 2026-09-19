@@ -168,7 +168,7 @@ export function crearApi(opciones: OpcionesApi = {}) {
       if (metodo === 'POST' && ruta === '/ia/decidir') {
         if (!ia) {
           return responder(res, 503, {
-            error: 'La IA no está configurada: crea el fichero .env.local con GEMINI_API_KEY=tu_clave y reinicia el servidor.',
+            error: 'IA no disponible: no se encuentra GEMINI_API_KEY. Crea el fichero .env.local con la clave y reinicia el servidor.',
           });
         }
         const estadoPartida = JSON.parse(await leerCuerpo(req));
