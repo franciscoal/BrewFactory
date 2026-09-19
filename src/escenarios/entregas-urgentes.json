@@ -1,0 +1,25 @@
+{
+  "nombre": "Entregas urgentes",
+  "descripcion": "Muchos pedidos pequeños con plazos de 2 o 3 ciclos: lo difícil es expedir a tiempo y aprovechar los dos muelles.",
+  "semilla": 31,
+  "pedidosIniciales": [
+    { "cantidad": 50, "ciclosEntrega": 2 },
+    { "cantidad": 75, "ciclosEntrega": 3 },
+    { "cantidad": 50, "ciclosEntrega": 2 },
+    { "cantidad": 100, "ciclosEntrega": 3 },
+    { "cantidad": 50, "ciclosEntrega": 3 },
+    { "cantidad": 75, "ciclosEntrega": 2 }
+  ],
+  "llegadas": [
+    { "ciclo": 2, "pedidos": [{ "cantidad": 50, "ciclosEntrega": 2 }, { "cantidad": 75, "ciclosEntrega": 3 }] },
+    { "ciclo": 3, "pedidos": [{ "cantidad": 50, "ciclosEntrega": 2 }] },
+    { "ciclo": 4, "pedidos": [{ "cantidad": 100, "ciclosEntrega": 3 }, { "cantidad": 50, "ciclosEntrega": 2 }] },
+    { "ciclo": 5, "pedidos": [{ "cantidad": 75, "ciclosEntrega": 3 }] },
+    { "ciclo": 6, "pedidos": [{ "cantidad": 50, "ciclosEntrega": 2 }, { "cantidad": 50, "ciclosEntrega": 2 }] },
+    { "ciclo": 7, "pedidos": [{ "cantidad": 100, "ciclosEntrega": 3 }] },
+    { "ciclo": 8, "pedidos": [{ "cantidad": 75, "ciclosEntrega": 2 }] },
+    { "ciclo": 9, "pedidos": [{ "cantidad": 50, "ciclosEntrega": 2 }, { "cantidad": 50, "ciclosEntrega": 3 }] },
+    { "ciclo": 10, "pedidos": [{ "cantidad": 100, "ciclosEntrega": 3 }] }
+  ],
+  "aleatoriaTrasGuion": true
+}

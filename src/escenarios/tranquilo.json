@@ -1,0 +1,20 @@
+{
+  "nombre": "Jornada tranquila",
+  "descripcion": "Demanda moderada y plazos holgados: con líneas en Estándar se llega de sobra. Sirve para enseñar la mecánica básica.",
+  "semilla": 11,
+  "pedidosIniciales": [
+    { "cantidad": 100, "ciclosEntrega": 6 },
+    { "cantidad": 150, "ciclosEntrega": 7 },
+    { "cantidad": 100, "ciclosEntrega": 6 },
+    { "cantidad": 125, "ciclosEntrega": 8 }
+  ],
+  "llegadas": [
+    { "ciclo": 2, "pedidos": [{ "cantidad": 125, "ciclosEntrega": 6 }] },
+    { "ciclo": 4, "pedidos": [{ "cantidad": 100, "ciclosEntrega": 6 }] },
+    { "ciclo": 6, "pedidos": [{ "cantidad": 150, "ciclosEntrega": 7 }] },
+    { "ciclo": 8, "pedidos": [{ "cantidad": 100, "ciclosEntrega": 6 }] },
+    { "ciclo": 10, "pedidos": [{ "cantidad": 125, "ciclosEntrega": 7 }] },
+    { "ciclo": 12, "pedidos": [{ "cantidad": 150, "ciclosEntrega": 8 }] }
+  ],
+  "aleatoriaTrasGuion": true
+}

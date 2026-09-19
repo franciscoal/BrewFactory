@@ -3,6 +3,7 @@ import { BALANCE } from '../engine';
 import { useCtx } from './contexto';
 import { cambiarCicloSegundos, detener, pausar, paso, play } from './juego';
 import { PanelIA } from './PanelIA';
+import { SelectorEscenario } from './SelectorEscenario';
 
 const pct = (v: number) => `${Math.round(v)} %`;
 
@@ -67,6 +68,8 @@ export function Cabecera() {
             Siguiente en <b>{j.restante} s</b>
           </span>
         </div>
+
+        <SelectorEscenario />
 
         <div class="ajustes">
           <label class="campo">

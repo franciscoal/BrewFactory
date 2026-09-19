@@ -1,6 +1,7 @@
 export * from './acciones';
 export * from './balance';
 export * from './derivados';
+export * from './escenario';
 export * from './estado';
 export * from './ia';
 export * from './informe';

@@ -1,0 +1,22 @@
+{
+  "nombre": "Pico de demanda",
+  "descripcion": "Arranque suave y, hacia el ciclo 5, una avalancha de pedidos grandes con plazos cortos: hay que subir líneas a Alta y decidir prioridades.",
+  "semilla": 21,
+  "pedidosIniciales": [
+    { "cantidad": 150, "ciclosEntrega": 5 },
+    { "cantidad": 100, "ciclosEntrega": 5 },
+    { "cantidad": 200, "ciclosEntrega": 6 },
+    { "cantidad": 100, "ciclosEntrega": 6 }
+  ],
+  "llegadas": [
+    { "ciclo": 2, "pedidos": [{ "cantidad": 100, "ciclosEntrega": 6 }] },
+    { "ciclo": 3, "pedidos": [{ "cantidad": 150, "ciclosEntrega": 6 }] },
+    { "ciclo": 5, "pedidos": [{ "cantidad": 300, "ciclosEntrega": 4 }, { "cantidad": 300, "ciclosEntrega": 4 }] },
+    { "ciclo": 6, "pedidos": [{ "cantidad": 250, "ciclosEntrega": 4 }] },
+    { "ciclo": 7, "pedidos": [{ "cantidad": 300, "ciclosEntrega": 5 }] },
+    { "ciclo": 9, "pedidos": [{ "cantidad": 100, "ciclosEntrega": 6 }] },
+    { "ciclo": 11, "pedidos": [{ "cantidad": 150, "ciclosEntrega": 6 }] },
+    { "ciclo": 13, "pedidos": [{ "cantidad": 100, "ciclosEntrega": 6 }] }
+  ],
+  "aleatoriaTrasGuion": true
+}

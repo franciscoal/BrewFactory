@@ -1,6 +1,6 @@
 import { aplicarAcciones } from './acciones';
 import { BALANCE } from './balance';
-import { generarDemandaCiclo } from './demanda';
+import { generarDemanda } from './demanda';
 import { lineaActiva, muelleActivo, pedidosEnProduccion } from './derivados';
 import { describirDecisiones, NOMBRE_VELOCIDAD } from './informe';
 import type { Acciones, Efecto, Estado, Informe, Okr, Pedido, PedidoId, Suceso } from './types';
@@ -185,7 +185,7 @@ export function step(previo: Estado, acciones?: Acciones): ResultadoStep {
   e.okr = okr;
   for (const p of e.pedidos) p.contador -= 1;
   const conocidos = new Set(e.pedidos.map((p) => p.id));
-  generarDemandaCiclo(e);
+  generarDemanda(e, cicloResuelto);
   for (const p of e.pedidos.filter((x) => !conocidos.has(x.id))) {
     sucesos.push({ categoria: 'demanda', texto: `Nuevo pedido ${p.id}: ${p.cantidad} botellas, ${plural(p.contador, 'ciclo', 'ciclos')}` });
   }

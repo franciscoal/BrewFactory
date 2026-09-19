@@ -1,13 +1,15 @@
 import { BALANCE } from './balance';
-import { crearPedido } from './demanda';
-import type { Estado } from './types';
+import { agregarPedido, crearPedido } from './demanda';
+import type { Escenario, Estado } from './types';
 
-export function estadoInicial(semilla = 1): Estado {
+/** Estado inicial. Con escenario, la semilla y los pedidos iniciales salen de él. */
+export function estadoInicial(semilla = 1, escenario: Escenario | null = null): Estado {
+  const semillaFinal = escenario ? escenario.semilla : semilla;
   const okr = { ...BALANCE.inicial, rentabilidad: 100 };
   const e: Estado = {
     ciclo: 0,
-    semilla,
-    rng: semilla >>> 0,
+    semilla: semillaFinal,
+    rng: semillaFinal >>> 0,
     siguienteId: 1,
     pedidos: [],
     lineas: Array.from({ length: BALANCE.numLineas }, (_, i) => ({
@@ -22,7 +24,12 @@ export function estadoInicial(semilla = 1): Estado {
     okr,
     historial: [],
     ultimoInforme: null,
+    escenario,
   };
-  for (let i = 0; i < BALANCE.demanda.pedidosIniciales; i++) crearPedido(e);
+  if (escenario) {
+    for (const p of escenario.pedidosIniciales) agregarPedido(e, p.cantidad, p.ciclosEntrega);
+  } else {
+    for (let i = 0; i < BALANCE.demanda.pedidosIniciales; i++) crearPedido(e);
+  }
   return e;
 }

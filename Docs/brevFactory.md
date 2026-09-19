@@ -255,7 +255,33 @@ El sistema **descarta solo esa acción**, aplica el resto y muestra un mensaje l
 - **Guardado de partida:** semilla, escenario, acciones por ciclo y tabla de KPI, exportable. Permite reproducir la partida y comparar humano contra IA.
 - **Fichero único de balance** con todas las cifras (porcentajes, capacidades, umbrales), para ajustar sin tocar la lógica.
 
-## 11. Pendiente para después
-- Calibrar el equilibrio con **bots** (todo Estándar, todo Alta, aleatorio, IA). Con las reglas actuales, todo Estándar satura la Productividad al 100 % y la demanda debe forzar decisiones.
-- Ajustar penalizaciones y recompensas tras jugar.
-- Diseñar los escenarios enlatados de la demo.
+## 11. Escenarios y calibración
+
+### Escenarios enlatados
+Ficheros JSON en `src/escenarios/` con pedidos iniciales y llegadas programadas por ciclo. Se eligen en la cabecera (**Escenario**) antes de empezar, o se cargan desde un archivo propio con **Cargar escenario…**. Al agotarse el guion pueden seguir con demanda aleatoria (`aleatoriaTrasGuion`). Incluidos:
+
+| Escenario | Qué muestra |
+|---|---|
+| Jornada tranquila | Demanda moderada y plazos holgados. Mecánica básica. |
+| Pico de demanda | Avalancha de pedidos grandes hacia el ciclo 5: exige velocidad Alta y prioridades. |
+| Entregas urgentes | Pedidos pequeños con plazos de 2–3 ciclos: exige expedir a tiempo con los dos muelles. |
+
+### Bots de calibración
+`npm run calibrar [-- ciclos partidas]` juega partidas completas con estrategias automáticas (todo Estándar, todo Alta, todo Baja, aleatorio y adaptativo) sobre demanda aleatoria y sobre cada escenario. Muestra rentabilidad media, mínima y máxima y los OKR finales.
+
+Primeros resultados (48 ciclos, 200 partidas aleatorias por estrategia):
+
+| Estrategia | Rentabilidad media | Observación |
+|---|---|---|
+| Adaptativo (Estándar, y Alta si hay mucha cartera) | 96 % | Casi óptima. |
+| Todo Estándar | 95 % | Casi óptima sin ninguna decisión. |
+| Aleatorio | 64 % | Productividad hundida. |
+| Todo Alta | 54 % | Productividad 0 %: −12 %/ciclo con 4 líneas. |
+| Todo Baja | 31 % | Cumplimiento y productividad a 0 %. |
+
+**Conclusión:** el juego está **desequilibrado a favor de una estrategia trivial**: un bot que asigna por urgencia y deja todo en Estándar casi alcanza el máximo. La velocidad Alta nunca compensa porque la Productividad, con peso 50 %, se desploma más rápido de lo que se recupera.
+
+## 12. Pendiente para después
+- Ajustar penalizaciones y recompensas para que la velocidad Alta y las decisiones de prioridad sean útiles (por ejemplo, penalización de Alta más suave, más demanda o plazos más ajustados). Usar `npm run calibrar` para medir el efecto.
+- Revisión visual en pantallas pequeñas (el tablero necesita unos 1200 px de ancho).
+- Endpoint HTTP local para la IA (`GET /state`, `POST /actions`).

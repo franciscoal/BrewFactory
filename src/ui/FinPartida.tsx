@@ -38,7 +38,7 @@ export function FinPartida() {
             class="btn"
             onClick={() => {
               setOculto(false);
-              setJ(juegoNuevo());
+              setJ(juegoNuevo(undefined, j.estado.escenario));
             }}
           >
             Nueva partida

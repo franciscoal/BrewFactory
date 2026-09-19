@@ -1,5 +1,5 @@
 import { aplicarAcciones, BALANCE, estadoInicial, muelleActivo, step } from '../engine';
-import type { Acciones, Estado, Informe, PedidoId, Velocidad } from '../engine';
+import type { Acciones, Escenario, Estado, Informe, PedidoId, Velocidad } from '../engine';
 
 export type Fase = 'detenido' | 'jugando' | 'pausa' | 'terminado';
 
@@ -51,8 +51,8 @@ export function vistaDe(estado: Estado, plan: Acciones): Estado {
   return vista;
 }
 
-export function juegoNuevo(semilla = (Math.random() * 2 ** 31) >>> 0): Juego {
-  const estado = estadoInicial(semilla);
+export function juegoNuevo(semilla = (Math.random() * 2 ** 31) >>> 0, escenario: Escenario | null = null): Juego {
+  const estado = estadoInicial(semilla, escenario);
   return {
     estado,
     plan: planDesde(estado),
@@ -213,6 +213,7 @@ export function resultadoJson(j: Juego): string {
       juego: 'BrewFactory',
       version: 1,
       semilla: j.estado.semilla,
+      escenario: j.estado.escenario,
       ciclos: j.estado.ciclo,
       cicloSegundos: j.cicloSegundos,
       mediaRentabilidad: mediaRentabilidad(j.estado),

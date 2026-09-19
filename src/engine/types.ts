@@ -30,6 +30,23 @@ export interface Okr {
   rentabilidad: number;
 }
 
+export interface PedidoDef {
+  cantidad: number;
+  ciclosEntrega: number;
+}
+
+/** Escenario «enlatado»: demanda programada para una demo reproducible. */
+export interface Escenario {
+  nombre: string;
+  descripcion: string;
+  semilla: number;
+  pedidosIniciales: PedidoDef[];
+  /** Pedidos que llegan al resolver cada ciclo indicado (1 = primer ciclo). */
+  llegadas: { ciclo: number; pedidos: PedidoDef[] }[];
+  /** Al agotarse el guion, sigue con demanda aleatoria en lugar de dejar de generar. */
+  aleatoriaTrasGuion: boolean;
+}
+
 export type CategoriaDecision = 'anadidos' | 'retirados' | 'prioridad' | 'lineas' | 'velocidad' | 'muelles';
 export type CategoriaSuceso = 'produccion' | 'completados' | 'expedidos' | 'demanda';
 
@@ -77,6 +94,8 @@ export interface Estado {
   historial: { ciclo: number; okr: Okr }[];
   /** Informe del último ciclo resuelto (null antes del primero). */
   ultimoInforme: Informe | null;
+  /** Escenario en uso; null = demanda aleatoria por semilla. */
+  escenario: Escenario | null;
 }
 
 /** Acciones declarativas: configuración deseada completa. */
