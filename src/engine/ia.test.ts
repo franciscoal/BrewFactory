@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { usarBalanceOriginal } from './testing';
 import { estadoInicial, estadoParaIA, parsearAcciones, step } from './index';
 
+usarBalanceOriginal();
 describe('estadoParaIA', () => {
   it('es serializable e incluye reglas, pedidos, líneas y muelles', () => {
     const e = estadoInicial(3);

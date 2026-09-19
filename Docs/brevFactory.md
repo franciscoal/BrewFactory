@@ -62,7 +62,7 @@ Es una cola de pedidos que el juego genera aleatoriamente y la fábrica debe pro
 - Cada pedido tiene una **cantidad** de botellas y unos **ciclos de entrega** iniciales. En cada ciclo el contador baja en uno y puede llegar a valores negativos.
 - Orden por defecto: **por generación**. Un toggle permite **ordenar por vencimiento**.
 - El generador usa una **semilla**, así las partidas son reproducibles.
-- La carga media debe rondar la capacidad en velocidad Estándar (200 botellas/ciclo) y nunca superar la capacidad en Alta (400), con picos para que la velocidad Alta tenga sentido.
+- **Carga por defecto:** de media 1,3 pedidos por ciclo de 75 a 325 botellas (unas 260 botellas/ciclo), por encima de la capacidad en Estándar (200) y por debajo de la capacidad en Alta (400). La demanda se mueve en **oleadas** de 16 ciclos entre el 20 % y el 180 % de la media, de modo que hay épocas de sobra y épocas de saturación. La fase de la oleada depende de la semilla. Todos estos valores se ajustan en el botón ⚙ (§8.1).
 - Para la demo se prepararán **escenarios «enlatados»**: demanda programada en un fichero JSON.
 
 ### Cumplimiento (0–100 %, arranca en 100 %)
@@ -84,7 +84,9 @@ Hay **4 líneas**, cada una con tres velocidades. Su efecto se mide en la **Prod
 |---|---|---|---|
 | Baja | 25 | −5 % | Fábrica a medio gas, personal ocioso, costes repartidos entre poco producto. |
 | Estándar | 50 | +5 % | Velocidad de crucero. |
-| Alta | 100 | −3 % | Saturación del personal, averías y gasto de suministros disparado. |
+| Alta | 100 | −6 % | Saturación del personal, averías y gasto de suministros disparado. |
+
+Con estos valores la Productividad funciona como un **nivel de fatiga**: se puede tirar de velocidad Alta para absorber un pico de demanda, pero hay que recuperar después en Estándar. Los valores de la especificación original (Alta −3 %) están en `src/config/balance-original.json` y se recuperan con «Restaurar originales» en ⚙.
 
 ### 4.1 Pedidos de cada línea
 Cada línea tiene dos huecos: el pedido **actual** y el **siguiente**. Al arrastrar un pedido de la cola de demanda:
@@ -178,30 +180,52 @@ Después llega la resolución del ciclo (§2), que actualiza OKR, stock, contado
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
-│ OKR: Cumplimiento · Productividad · Entrega · Rentabilidad (grande)│
-│ ▶ Play  ⏸ Pause  ⏹ Stop  ⏭ Paso  [IA mode]  Ciclos / Limitar     │
-├───────────┬──────────────────────────────┬─────────┬───────┬───────┤
-│ Demanda   │ Línea 1: [Siguiente]⇄[Actual]│ Stock   │Muelle │ Tabla │
-│ comercial │ Línea 2: velocidad ▢▢▢ ⏻     │ exped.  │  1    │ KPI  │
-│ (tarjetas)│ Línea 3: resultado próximo   │(tarjeta)│Muelle │ por   │
-│           │ Línea 4: ciclo               │         │  2    │ ciclo │
-└───────────┴──────────────────────────────┴─────────┴───────┴───────┘
+│ OKR: Cumplimiento · Productividad · Entrega · RENTABILIDAD (grande) 😀│
+│ ▶ Play  ⏸ Pause  ⏹ Stop  ⏭ Paso  [IA mode]  ⚙  Ciclos / Limitar    │
+├──────────────┬─────────────┐                                       │
+│ 🏭 Fábrica   │ 📈 Resultados│   ← pestañas                          │
+├───────────┬──┴───────────────────────────┬─────────┬───────────────┤
+│ Demanda   │ Línea 1: [Siguiente]⇄[Actual]│ Stock   │ Muelle 1      │
+│ comercial │ Línea 2: velocidad ▢▢▢ ⏻     │ exped.  │ Muelle 2      │
+│ (tarjetas)│ Línea 3: resultado próximo   │(tarjeta)│               │
+│           │ Línea 4: ciclo               │         │               │
+└───────────┴──────────────────────────────┴─────────┴───────────────┘
+   Pestaña «Resultados»: gráficas (OKR y Rentabilidad) y, debajo, la tabla por ciclo.
 ```
 
-- **Panel superior (OKR):** cumplimiento, productividad y entrega, y **Rentabilidad en fuente mayor** por ser el indicador total. Botones de control. En pausa, botón **IA mode** para cargar el JSON de una IA.
+- **Panel superior (OKR):** cumplimiento, productividad y entrega, y **Rentabilidad en fuente mayor** por ser el indicador total, con el **emoji de estado** a su lado. Botones de control. En pausa, botón **IA mode** para cargar el JSON de una IA. El botón **⚙** abre la configuración (§8.1).
+- **Pestañas:** **Fábrica** (demanda, líneas, stock y muelles) y **Resultados** (gráficas y tabla por ciclo). El estado por ciclo y los OKR de la cabecera se ven en las dos.
 - **Estado por ciclo (opcional):** panel bajo la cabecera que resume cada ciclo resuelto. Se activa con el toggle **«Mostrar estado por ciclo»** (ver más abajo).
 - **Izquierda, demanda comercial:** tarjetas arrastrables con cantidad inicial, pendiente, ciclos originales, ciclos pendientes y líneas asociadas. Color: **verde tenue** si están asociadas a una línea, **blanco** si no tienen producción, **amarillo tenue** si están parcialmente producidas y sin línea.
 - **Centro, líneas:** cada línea tiene un panel pequeño a la izquierda (pedido siguiente) y uno mayor a la derecha (pedido actual), tres controles de velocidad apilados y siempre visibles, un botón para intercambiar los pedidos, un interruptor de apagado y un panel inferior con lo que producirá en el próximo ciclo (unidades e impacto en productividad).
 - **Stock de expediciones:** cola de tarjetas arrastrables. Terminados arriba por orden de finalización, incompletos debajo.
 - **Muelles:** dos huecos para tarjetas. Se activan o desactivan según el §5.2.
-- **Panel de resultados:** tabla con una fila por ciclo (Ciclo, Cumplimiento, Productividad, Entrega, Rentabilidad), dos gráficas de líneas (una con los tres OKR y otra solo con Rentabilidad) y, sobre la tabla, un emoji de estado.
+- **Pestaña Resultados:** dos gráficas de líneas (una con los tres OKR y otra solo con Rentabilidad) y, debajo, la tabla con una fila por ciclo (Ciclo, Cumplimiento, Productividad, Entrega, Rentabilidad).
 
-| Productividad | Emoji |
+El **emoji** refleja la **Rentabilidad** y se muestra junto a su marco en la cabecera:
+
+| Rentabilidad | Emoji |
 |---|---|
 | ≥ 70 % | Sonríe |
 | 50–69 % | Neutro |
 | 30–49 % | Preocupado |
 | < 30 % | Enfadado |
+
+### 8.1 Configuración (⚙)
+El botón con la rueda dentada abre un panel para ajustar las cifras del juego, agrupadas por acción:
+
+| Grupo | Qué se ajusta |
+|---|---|
+| Velocidades | Botellas por ciclo y efecto en Productividad de Baja, Estándar y Alta. |
+| Cumplimiento, Productividad, Entrega | Cada bonificación y penalización en %, y los umbrales de retraso en ciclos. |
+| Peso en la Rentabilidad | Los tres pesos (deben sumar 1). |
+| Valores iniciales | OKR de partida. |
+| Demanda aleatoria | Pedidos iniciales y por ciclo, cantidades, plazos y oleadas. |
+| Muelles y tiempo | Líneas necesarias para el muelle 2 y tiempo de ciclo por defecto. |
+
+Botones: **Aplicar** (usa los valores sin guardarlos), **Guardar en archivo** (escribe `public/config/balance.json`), **Exportar** e **Importar** un JSON, **Restaurar originales** (valores de la especificación) y **Descartar cambios**. El panel valida la coherencia (pesos, rangos, mínimos y máximos) antes de permitir aplicar o guardar. Si la partida no ha empezado, se reinicia con los nuevos valores manteniendo la semilla. Guardar solo funciona con el servidor de desarrollo o `vite preview`; en otro caso hay que usar Exportar.
+
+El fichero `public/config/balance.json` es la **única fuente** de las cifras: lo lee la aplicación al arrancar, el botón ⚙ lo escribe y `npm run calibrar` lo usa para medir el efecto de cualquier cambio. Las reglas que se envían a la IA se generan desde estas cifras.
 
 ### Estado por ciclo
 
@@ -253,7 +277,7 @@ El sistema **descarta solo esa acción**, aplica el resto y muestra un mensaje l
 - **Entidad única `Pedido`:** la cola de demanda y el stock de expediciones son vistas filtradas de una misma lista.
 - **Semilla** en el generador de demanda y **escenarios «enlatados»** para la demo.
 - **Guardado de partida:** semilla, escenario, acciones por ciclo y tabla de KPI, exportable. Permite reproducir la partida y comparar humano contra IA.
-- **Fichero único de balance** con todas las cifras (porcentajes, capacidades, umbrales), para ajustar sin tocar la lógica.
+- **Fichero único de balance** (`public/config/balance.json`) con todas las cifras (porcentajes, capacidades, umbrales, demanda), editable desde el botón ⚙ (§8.1) y sin tocar la lógica. Los valores de la especificación original se conservan en `src/config/balance-original.json`; los tests de reglas usan estos últimos para no depender del ajuste.
 
 ## 11. Escenarios y calibración
 
@@ -267,21 +291,36 @@ Ficheros JSON en `src/escenarios/` con pedidos iniciales y llegadas programadas 
 | Entregas urgentes | Pedidos pequeños con plazos de 2–3 ciclos: exige expedir a tiempo con los dos muelles. |
 
 ### Bots de calibración
-`npm run calibrar [-- ciclos partidas]` juega partidas completas con estrategias automáticas (todo Estándar, todo Alta, todo Baja, aleatorio y adaptativo) sobre demanda aleatoria y sobre cada escenario. Muestra rentabilidad media, mínima y máxima y los OKR finales.
+`npm run calibrar [-- ciclos partidas]` juega partidas completas con estrategias automáticas sobre demanda aleatoria y sobre cada escenario. Muestra rentabilidad media, mínima y máxima y los OKR finales. Opciones: `--config=ruta.json` (otro fichero de balance), `--set=grupo.campo=valor` (cambiar una cifra sin tocar ficheros, repetible) y `--solo-aleatorias`. Con opciones hay que lanzarlo directamente (`npx tsx scripts/calibrar.ts 48 200 --solo-aleatorias`), porque npm no las reenvía bien.
 
-Primeros resultados (48 ciclos, 200 partidas aleatorias por estrategia):
+Estrategias: Todo Estándar, Todo Alta, Todo Baja, Aleatorio, Adaptativo (Alta en todas las líneas si hay mucha cartera), Mixto (2 líneas en Alta), Adaptativo fino (sube a Alta las líneas que pida la cartera) y **Gestor** (como el fino, pero se frena para recuperar la Productividad).
+
+### Reequilibrado
+**Problema inicial** (valores originales): todo Estándar daba un 95 % sin tomar ninguna decisión y la velocidad Alta nunca compensaba (Alta −3 %/línea hundía la Productividad y no había demanda que la exigiera).
+
+**Cambios:**
+- Alta pasa de −3 % a **−6 %**: usar Alta cuesta fatiga real.
+- La demanda sube a **1,3 pedidos/ciclo de 75 a 325 botellas** (Estándar ya no basta).
+- La demanda llega en **oleadas** (16 ciclos, amplitud 0,8): un ajuste estático no vale, hay que reaccionar.
+
+Resultados (48 ciclos, 200 partidas de demanda aleatoria por estrategia):
 
 | Estrategia | Rentabilidad media | Observación |
 |---|---|---|
-| Adaptativo (Estándar, y Alta si hay mucha cartera) | 96 % | Casi óptima. |
-| Todo Estándar | 95 % | Casi óptima sin ninguna decisión. |
-| Aleatorio | 64 % | Productividad hundida. |
-| Todo Alta | 54 % | Productividad 0 %: −12 %/ciclo con 4 líneas. |
+| Gestor | 83 % | La mejor: usa Alta en los picos y recupera después. |
+| Todo Estándar | 79 % | Cumplimiento a 0 %: no llega a la demanda. |
+| Mixto (2 líneas en Alta) | 71 % | Productividad agotada. |
+| Adaptativo | 67 % | Alta sostenida en todas las líneas hunde la Productividad. |
+| Adaptativo fino | 64 % | Idem, más suave. |
+| Todo Alta | 50 % | Productividad 0 %. |
+| Aleatorio | 41 % | Sin criterio. |
 | Todo Baja | 31 % | Cumplimiento y productividad a 0 %. |
 
-**Conclusión:** el juego está **desequilibrado a favor de una estrategia trivial**: un bot que asigna por urgencia y deja todo en Estándar casi alcanza el máximo. La velocidad Alta nunca compensa porque la Productividad, con peso 50 %, se desploma más rápido de lo que se recupera.
+Los escenarios enlatados reproducen el orden: el Gestor gana en los tres (Jornada tranquila: empata con Estándar; Pico de demanda: 88 %; Entregas urgentes: 79 %).
+
+**Limitación:** la ventaja del mejor bot sobre Todo Estándar es solo de unos 4 puntos. Los bots no usan todas las palancas (apagar líneas, priorizar con criterios distintos del vencimiento, uso del muelle 2), que es donde una persona o una IA pueden ganar más.
 
 ## 12. Pendiente para después
-- Ajustar penalizaciones y recompensas para que la velocidad Alta y las decisiones de prioridad sean útiles (por ejemplo, penalización de Alta más suave, más demanda o plazos más ajustados). Usar `npm run calibrar` para medir el efecto.
+- Seguir ajustando con ⚙ y `npm run calibrar` (por ejemplo, subir el peso de Cumplimiento y Entrega o endurecer los retrasos para penalizar más el «Todo Estándar»).
 - Revisión visual en pantallas pequeñas (el tablero necesita unos 1200 px de ancho).
 - Endpoint HTTP local para la IA (`GET /state`, `POST /actions`).

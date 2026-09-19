@@ -3,21 +3,26 @@ import type { Velocidad } from './balance';
 import { lineaActiva, muelleActivo } from './derivados';
 import type { Acciones, Estado, Informe, Okr, PedidoId } from './types';
 
-/** Reglas resumidas que viajan en el estado para que la IA juegue sin más documentación. */
-export const REGLAS_IA: string[] = [
-  'Cada ciclo (1 hora) tú decides la configuración deseada COMPLETA y el sistema resuelve el ciclo: producción, expedición, OKR.',
-  'Objetivo: maximizar la rentabilidad = 0.25·cumplimiento + 0.50·productividad + 0.25·entrega (todo de 0 a 100).',
-  'Hay 4 líneas. Velocidades: baja (25 botellas, productividad −5), estandar (50, +5), alta (100, −3) por línea activa y ciclo.',
-  'Una línea es activa si está encendida y tiene pedido "actual". "siguiente" es la reserva: recibe el sobrante y pasa a actual al terminar el actual.',
-  'Un pedido puede estar en varias líneas a la vez. Apagar una línea (encendida=false) libera sus pedidos: deja actual y siguiente a null.',
-  'Cumplimiento: +5 por pedido que es actual de una línea activa y no va con retraso (ciclosPendientes >= 0); −5 por pedido pendiente en retraso; −20 si no queda demanda.',
-  'Productividad: −5 por pedido con producción parcial que no es actual de ninguna línea activa; −20 si no hay stock, hay demanda y ninguna línea activa.',
-  'Un pedido completado en el ciclo n pasa al stock (estado "terminado"). Solo puedes asignarlo a un muelle en el ciclo n+1, y se expide en ese ciclo.',
-  'Muelle 1 siempre activo; muelle 2 solo con 3 o más líneas activas. Cada muelle recibe el id de un pedido "terminado" o null.',
-  'Entrega: +10 por pedido expedido a tiempo (ciclosPendientes >= 0); expedido con retraso ni suma ni resta.',
-  'Entrega: por cada pedido terminado sin expedir −5 (−15 si había un muelle libre); además −5 (retraso 1-3 ciclos), −10 (4-10) o −20 (>10) si va con retraso.',
-  'Acciones no permitidas (pedido inexistente, no terminado en un muelle, pedidos en línea apagada, mismo pedido actual y siguiente...) se descartan y se notifican en erroresCicloAnterior.',
-];
+const pct = (n: number): string => `${n > 0 ? '+' : ''}${n}`;
+
+/** Reglas resumidas que viajan en el estado para que la IA juegue sin más documentación. Usan las cifras del balance en uso. */
+export function reglasIA(): string[] {
+  const { velocidades: v, cumplimiento: c, productividad: p, entrega: en, pesosRentabilidad: w, muelle2MinLineasActivas } = BALANCE;
+  return [
+    'Cada ciclo (1 hora) tú decides la configuración deseada COMPLETA y el sistema resuelve el ciclo: producción, expedición, OKR.',
+    `Objetivo: maximizar la rentabilidad = ${w.cumplimiento}·cumplimiento + ${w.productividad}·productividad + ${w.entrega}·entrega (todo de 0 a 100).`,
+    `Hay ${BALANCE.numLineas} líneas. Velocidades: baja (${v.baja.botellas} botellas, productividad ${pct(v.baja.productividad)}), estandar (${v.estandar.botellas}, ${pct(v.estandar.productividad)}), alta (${v.alta.botellas}, ${pct(v.alta.productividad)}) por línea activa y ciclo.`,
+    'Una línea es activa si está encendida y tiene pedido "actual". "siguiente" es la reserva: recibe el sobrante y pasa a actual al terminar el actual.',
+    'Un pedido puede estar en varias líneas a la vez. Apagar una línea (encendida=false) libera sus pedidos: deja actual y siguiente a null.',
+    `Cumplimiento: ${pct(c.pedidoEnProduccionATiempo)} por pedido que es actual de una línea activa y no va con retraso (ciclosPendientes >= 0); ${pct(c.pedidoEnRetraso)} por pedido pendiente en retraso; ${pct(c.sinDemanda)} si no queda demanda.`,
+    `Productividad: ${pct(p.incompletoEnStockNoActivo)} por pedido con producción parcial que no es actual de ninguna línea activa; ${pct(p.sinStockConDemandaSinActivos)} si no hay stock, hay demanda y ninguna línea activa.`,
+    'Un pedido completado en el ciclo n pasa al stock (estado "terminado"). Solo puedes asignarlo a un muelle en el ciclo n+1, y se expide en ese ciclo.',
+    `Muelle 1 siempre activo; muelle 2 solo con ${muelle2MinLineasActivas} o más líneas activas. Cada muelle recibe el id de un pedido "terminado" o null.`,
+    `Entrega: ${pct(en.aTiempo)} por pedido expedido a tiempo (ciclosPendientes >= 0); expedido con retraso ni suma ni resta.`,
+    `Entrega: por cada pedido terminado sin expedir ${pct(en.terminadoSinEntregar)} (${pct(en.terminadoSinEntregarMuelleLibre)} si había un muelle libre); además ${pct(en.retrasoLeve)} (retraso 1-${en.umbralRetrasoLeve} ciclos), ${pct(en.retrasoMedio)} (${en.umbralRetrasoLeve + 1}-${en.umbralRetrasoMedio}) o ${pct(en.retrasoGrave)} (>${en.umbralRetrasoMedio}) si va con retraso.`,
+    'Acciones no permitidas (pedido inexistente, no terminado en un muelle, pedidos en línea apagada, mismo pedido actual y siguiente...) se descartan y se notifican en erroresCicloAnterior.',
+  ];
+}
 
 export interface PedidoIA {
   id: PedidoId;
@@ -55,7 +60,7 @@ export function estadoParaIA(e: Estado, erroresCicloAnterior: string[] = []): Es
   return {
     juego: 'BrewFactory',
     version: 1,
-    reglas: REGLAS_IA,
+    reglas: reglasIA(),
     ciclo: e.ciclo,
     okr: e.okr,
     historialOkr: e.historial.slice(-HISTORIAL_MAX),

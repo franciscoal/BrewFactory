@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { usarBalanceOriginal } from '../engine/testing';
 import { ESCENARIOS } from '../escenarios';
 import { ESTRATEGIAS } from './estrategias';
 import { jugar, resumir } from './simulador';
 
+usarBalanceOriginal();
 describe('bots', () => {
   it('todas las estrategias juegan partidas completas con OKR dentro de rango', () => {
     for (const [nombre, crear] of Object.entries(ESTRATEGIAS)) {

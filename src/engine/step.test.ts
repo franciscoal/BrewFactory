@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { usarBalanceOriginal } from './testing';
 import { estadoInicial, step } from './index';
 import type { Acciones, Estado, Pedido } from './index';
 
@@ -30,6 +31,7 @@ const acc = (lineas: Partial<Acciones['lineas'][number]>[], muelles: Acciones['m
 
 const get = (e: Estado, id: string) => e.pedidos.find((p) => p.id === id)!;
 
+usarBalanceOriginal();
 describe('estado inicial', () => {
   it('arranca al 100 % con 6 pedidos y líneas encendidas sin pedido', () => {
     const e = estadoInicial(1);

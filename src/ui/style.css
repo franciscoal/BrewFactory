@@ -192,6 +192,134 @@ h3 {
   z-index: 10;
 }
 
+/* ── Emoji, pestañas y configuración ──────────────────── */
+.emoji-kpi {
+  align-self: center;
+  font-size: 2.6rem;
+  line-height: 1;
+}
+
+.btn.engranaje {
+  font-size: 1.1rem;
+  padding: 0.3rem 0.65rem;
+}
+
+.pestanas {
+  display: flex;
+  gap: 0.3rem;
+  padding: 0.4rem 0.6rem 0;
+  border-bottom: 1px solid var(--borde);
+  background: var(--fondo);
+}
+
+.pestana {
+  padding: 0.45rem 1.1rem;
+  border: 1px solid var(--borde);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  background: #e9e4d6;
+  color: var(--suave);
+}
+
+.pestana.activa {
+  background: var(--panel);
+  color: var(--texto);
+  font-weight: 700;
+  margin-bottom: -1px;
+}
+
+.pagina-resultados {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  padding: 0.6rem;
+}
+
+.pagina-resultados .resultados {
+  flex: 1;
+}
+
+.graficas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 0.7rem 1rem 0;
+}
+
+.graficas h3 {
+  font-size: 0.9rem;
+  margin-bottom: 0.2rem;
+}
+
+.graficas .grafica {
+  height: 260px;
+  padding: 0;
+}
+
+.resultados .tabla-wrap {
+  padding: 0.6rem 1rem 1rem;
+}
+
+.resultados table {
+  font-size: 0.85rem;
+}
+
+.modal.config {
+  width: min(1100px, 95vw);
+  max-height: 92vh;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.config-grupos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 0.8rem;
+  margin: 0.6rem 0;
+}
+
+.config-grupo {
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 0.4rem 0.7rem 0.6rem;
+}
+
+.config-grupo legend {
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0 0.3rem;
+}
+
+.config-campo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.8rem;
+  padding: 0.15rem 0;
+}
+
+.config-valor {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex: none;
+}
+
+.config-valor input {
+  width: 5rem;
+  text-align: right;
+}
+
+.config-valor small {
+  width: 3.4rem;
+  color: var(--suave);
+}
+
+.config-pie {
+  flex-wrap: wrap;
+}
+
 /* ── Modo IA ──────────────────────────────────────────── */
 .btn.ia {
   border-color: #7b3fb5;
@@ -328,7 +456,7 @@ h3 {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 250px minmax(520px, 1fr) 230px 200px 340px;
+  grid-template-columns: 280px minmax(560px, 1fr) 260px 230px;
   gap: 0.6rem;
   padding: 0.6rem;
 }

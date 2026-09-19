@@ -68,6 +68,20 @@ export const ESTRATEGIAS: Record<string, (semilla: number) => Estrategia> = {
   'todo-alta': () => fija('alta'),
   'todo-baja': () => fija('baja'),
   aleatorio: aleatoria,
-  /** Estándar por defecto; Alta cuando la cartera pendiente supera lo que 4 líneas estándar hacen en 3 ciclos. */
+  /** Estándar por defecto; Alta en todas las líneas cuando la cartera supera lo que 4 líneas estándar hacen en 3 ciclos. */
   adaptativo: () => (e) => planificar(e, () => (cartera(e) > 600 ? 'alta' : 'estandar')),
+  /** Dos líneas siempre en Alta y dos en Estándar. */
+  'mixto-2alta': () => (e) => planificar(e, (_, id) => (id <= 2 ? 'alta' : 'estandar')),
+  /** Como adaptativo-fino, pero cuida la Productividad: se frena si está baja para recuperarla en Estándar. */
+  gestor: () => (e) => {
+    const pedidas = Math.min(BALANCE.numLineas, Math.max(0, Math.floor((cartera(e) - 300) / 150)));
+    const p = e.okr.productividad;
+    const k = p < 35 ? 0 : p < 65 ? Math.min(pedidas, 1) : pedidas;
+    return planificar(e, (_, id) => (id <= k ? 'alta' : 'estandar'));
+  },
+  /** Sube a Alta tantas líneas como pida la cartera (una más por cada 150 botellas sobre 300). */
+  'adaptativo-fino': () => (e) => {
+    const k = Math.min(BALANCE.numLineas, Math.max(0, Math.floor((cartera(e) - 300) / 150)));
+    return planificar(e, (_, id) => (id <= k ? 'alta' : 'estandar'));
+  },
 };

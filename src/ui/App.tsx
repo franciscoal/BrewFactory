@@ -16,6 +16,7 @@ export function App() {
   const [arrastre, setArrastre] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [mostrarInforme, setMostrarInforme] = useState(false);
+  const [pestana, setPestana] = useState<'fabrica' | 'resultados'>('fabrica');
   const [resaltado, setResaltado] = useState<Cambios | null>(null);
   const temporizadorResaltado = useRef<number>();
   const temporizador = useRef<number>();
@@ -75,13 +76,25 @@ export function App() {
           </div>
         )}
         {mostrarInforme && <InformeCiclo />}
-        <main class="tablero">
-          <Demanda />
-          <Lineas />
-          <Stock />
-          <Muelles />
-          <Resultados />
-        </main>
+        <nav class="pestanas" role="tablist">
+          {(['fabrica', 'resultados'] as const).map((p) => (
+            <button key={p} role="tab" aria-selected={pestana === p} class={`pestana${pestana === p ? ' activa' : ''}`} onClick={() => setPestana(p)}>
+              {p === 'fabrica' ? '🏭 Fábrica' : '📈 Resultados'}
+            </button>
+          ))}
+        </nav>
+        {pestana === 'fabrica' ? (
+          <main class="tablero">
+            <Demanda />
+            <Lineas />
+            <Stock />
+            <Muelles />
+          </main>
+        ) : (
+          <main class="pagina-resultados">
+            <Resultados />
+          </main>
+        )}
         {aviso && (
           <div class="aviso" role="alert">
             {aviso}

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { usarBalanceOriginal } from './testing';
 import { estadoInicial, step } from './index';
 import type { Acciones, Estado, Pedido } from './index';
 
@@ -23,6 +24,7 @@ function plan(e: Estado, cambios: Record<number, Partial<Acciones['lineas'][numb
 
 const textos = (e: Estado, categoria: string) => (e.ultimoInforme?.decisiones ?? []).filter((d) => d.categoria === categoria).map((d) => d.texto);
 
+usarBalanceOriginal();
 describe('informe de decisiones', () => {
   it('sin cambios no hay decisiones', () => {
     const e = base([pedido('A', 500)]);

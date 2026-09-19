@@ -51,26 +51,22 @@ function Grafica({ estado, series }: { estado: Estado; series: (keyof typeof COL
   );
 }
 
-function emoji(productividad: number): string {
-  if (productividad >= 70) return '😀';
-  if (productividad >= 50) return '😐';
-  if (productividad >= 30) return '😟';
-  return '😠';
-}
-
+/** Pestaña «Resultados»: gráficas de la evolución y, debajo, la tabla con los OKR de cada ciclo. */
 export function Resultados() {
   const { j } = useCtx();
   const e = j.estado;
   const filas = [...e.historial].reverse();
   return (
     <section class="panel resultados">
-      <header class="panel-cab">
-        <h2>Resultados</h2>
-      </header>
-      <Grafica estado={e} series={['cumplimiento', 'productividad', 'entrega']} />
-      <Grafica estado={e} series={['rentabilidad']} />
-      <div class="emoji" title={`Productividad ${Math.round(e.okr.productividad)} %`}>
-        {emoji(e.okr.productividad)}
+      <div class="graficas">
+        <div>
+          <h3>OKR por ciclo</h3>
+          <Grafica estado={e} series={['cumplimiento', 'productividad', 'entrega']} />
+        </div>
+        <div>
+          <h3>Rentabilidad por ciclo</h3>
+          <Grafica estado={e} series={['rentabilidad']} />
+        </div>
       </div>
       <div class="tabla-wrap">
         <table>

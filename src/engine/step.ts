@@ -19,10 +19,12 @@ export function rentabilidad(o: Pick<Okr, 'cumplimiento' | 'productividad' | 'en
   return w.cumplimiento * o.cumplimiento + w.productividad * o.productividad + w.entrega * o.entrega;
 }
 
-/** Penalización del tramo de retraso para un contador negativo. */
+/** Penalización del tramo de retraso para un contador negativo (los extremos van al tramo más favorable). */
 function penalizacionRetraso(contador: number): number {
-  const tramo = BALANCE.entrega.tramosRetraso.find((t) => contador >= t.min);
-  return tramo ? tramo.penalizacion : 0;
+  const b = BALANCE.entrega;
+  if (contador >= -b.umbralRetrasoLeve) return b.retrasoLeve;
+  if (contador >= -b.umbralRetrasoMedio) return b.retrasoMedio;
+  return b.retrasoGrave;
 }
 
 /**

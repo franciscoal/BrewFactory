@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { usarBalanceOriginal } from './testing';
 import { ESCENARIOS } from '../escenarios';
 import { estadoInicial, parsearEscenario, step } from './index';
 import type { Escenario } from './index';
@@ -12,6 +13,7 @@ const mini: Escenario = {
   aleatoriaTrasGuion: false,
 };
 
+usarBalanceOriginal();
 describe('escenarios', () => {
   it('crean los pedidos iniciales del guion', () => {
     const e = estadoInicial(99, mini);

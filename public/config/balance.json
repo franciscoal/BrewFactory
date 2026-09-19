@@ -1,0 +1,63 @@
+{
+  "numLineas": 4,
+  "velocidades": {
+    "baja": {
+      "botellas": 25,
+      "productividad": -5
+    },
+    "estandar": {
+      "botellas": 50,
+      "productividad": 5
+    },
+    "alta": {
+      "botellas": 100,
+      "productividad": -6
+    }
+  },
+  "inicial": {
+    "cumplimiento": 100,
+    "productividad": 100,
+    "entrega": 100
+  },
+  "pesosRentabilidad": {
+    "cumplimiento": 0.25,
+    "productividad": 0.5,
+    "entrega": 0.25
+  },
+  "cumplimiento": {
+    "sinDemanda": -20,
+    "pedidoEnProduccionATiempo": 5,
+    "pedidoEnRetraso": -5
+  },
+  "productividad": {
+    "incompletoEnStockNoActivo": -5,
+    "sinStockConDemandaSinActivos": -20
+  },
+  "entrega": {
+    "aTiempo": 10,
+    "retrasoLeve": -5,
+    "retrasoMedio": -10,
+    "retrasoGrave": -20,
+    "umbralRetrasoLeve": 3,
+    "umbralRetrasoMedio": 10,
+    "terminadoSinEntregar": -5,
+    "terminadoSinEntregarMuelleLibre": -15
+  },
+  "demanda": {
+    "pedidosIniciales": 6,
+    "cantidadMin": 75,
+    "cantidadMax": 325,
+    "cantidadPaso": 25,
+    "ciclosEntregaMin": 3,
+    "ciclosEntregaMax": 8,
+    "pedidosPorCiclo": 1.3,
+    "oleadaPeriodo": 16,
+    "oleadaAmplitud": 0.8
+  },
+  "muelle2MinLineasActivas": 3,
+  "cicloSegundosPorDefecto": 15,
+  "cicloSegundosRango": {
+    "min": 3,
+    "max": 60
+  }
+}

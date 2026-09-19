@@ -1,11 +1,20 @@
 import { useState } from 'preact/hooks';
 import { BALANCE } from '../engine';
+import { Configuracion } from './Configuracion';
 import { useCtx } from './contexto';
 import { cambiarCicloSegundos, detener, pausar, paso, play } from './juego';
 import { PanelIA } from './PanelIA';
 import { SelectorEscenario } from './SelectorEscenario';
 
 const pct = (v: number) => `${Math.round(v)} %`;
+
+/** Cara según la rentabilidad: ≥70 sonríe, 50–69 neutro, 30–49 preocupado, <30 enfadado. */
+function emoji(rentabilidad: number): string {
+  if (rentabilidad >= 70) return '😀';
+  if (rentabilidad >= 50) return '😐';
+  if (rentabilidad >= 30) return '😟';
+  return '😠';
+}
 
 function Kpi({ nombre, valor, grande = false }: { nombre: string; valor: number; grande?: boolean }) {
   const nivel = valor >= 70 ? 'bien' : valor >= 40 ? 'medio' : 'mal';
@@ -20,6 +29,7 @@ function Kpi({ nombre, valor, grande = false }: { nombre: string; valor: number;
 export function Cabecera() {
   const { j, setJ, mostrarInforme, setMostrarInforme } = useCtx();
   const [iaAbierto, setIaAbierto] = useState(false);
+  const [configAbierta, setConfigAbierta] = useState(false);
   const { okr } = j.estado;
   const jugando = j.fase === 'jugando';
   const terminado = j.fase === 'terminado';
@@ -33,6 +43,9 @@ export function Cabecera() {
         <Kpi nombre="Productividad" valor={okr.productividad} />
         <Kpi nombre="Entrega" valor={okr.entrega} />
         <Kpi nombre="Rentabilidad" valor={okr.rentabilidad} grande />
+        <div class="emoji-kpi" title={`Estado según la rentabilidad (${Math.round(okr.rentabilidad)} %)`} role="img" aria-label="Estado de la fábrica">
+          {emoji(okr.rentabilidad)}
+        </div>
       </div>
 
       <div class="controles">
@@ -56,6 +69,9 @@ export function Cabecera() {
             title="Solo con la partida parada o en pausa"
           >
             🤖 IA mode
+          </button>
+          <button class="btn engranaje" onClick={() => setConfigAbierta(true)} title="Configuración" aria-label="Configuración">
+            ⚙
           </button>
         </div>
 
@@ -110,6 +126,7 @@ export function Cabecera() {
         </div>
       </div>
       {iaAbierto && <PanelIA onCerrar={() => setIaAbierto(false)} />}
+      {configAbierta && <Configuracion onCerrar={() => setConfigAbierta(false)} />}
     </header>
   );
 }
