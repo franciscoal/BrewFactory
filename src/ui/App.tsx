@@ -12,6 +12,8 @@ import type { Cambios, Juego, Resultado } from './juego';
 import { consultarIA } from './ia';
 import type { DisponibilidadIA } from './ia';
 import { MANUAL, modoPorDefecto, usePiloto } from './piloto';
+import { useRegistro } from './registroDecisiones';
+import type { Activos } from './registroDecisiones';
 import type { TipoPiloto } from './piloto';
 import { Lineas } from './Lineas';
 import { Razonamiento } from './Razonamiento';
@@ -24,6 +26,8 @@ export function App() {
   const [aviso, setAviso] = useState<string | null>(null);
   const [mostrarInforme, setMostrarInforme] = useState(false);
   const [apiActiva, setApiActiva] = useState(true);
+  // Enviar datos a un servicio externo es opcional: empieza apagado.
+  const [registroActivo, setRegistroActivo] = useState<Activos>({ sheets: false, db: false });
   const [tipoPiloto, setTipoPiloto] = useState<TipoPiloto>('usuario');
   const [modo, setModo] = useState(MANUAL);
   const [iaDisponible, setIaDisponible] = useState<DisponibilidadIA>({ disponible: false, modelo: null });
@@ -57,6 +61,12 @@ export function App() {
   usePiloto(tipoPiloto === 'bot' ? modo : MANUAL, j, setJ, resaltar);
   const ia = useControlIA(tipoPiloto === 'ia', tipoPiloto === 'ia' && modo === 'autonomo', j, setJ, resaltar);
 
+  const registro = useRegistro(registroActivo, j, {
+    piloto: tipoPiloto,
+    modo,
+    modelo: tipoPiloto === 'ia' ? iaDisponible.modelo : null,
+  });
+
   // ¿Tiene el servidor la clave de la IA? Se vuelve a consultar al elegir el piloto IA (por si se acaba de configurar).
   useEffect(() => {
     consultarIA().then(setIaDisponible);
@@ -82,6 +92,9 @@ export function App() {
     apiActiva,
     setApiActiva,
     estadoApi,
+    registroActivo,
+    setRegistroActivo: (destino: keyof Activos, activo: boolean) => setRegistroActivo((x) => ({ ...x, [destino]: activo })),
+    registro,
     mostrarInforme,
     setMostrarInforme,
     hacer: (op: (v: Estado) => Resultado) => {

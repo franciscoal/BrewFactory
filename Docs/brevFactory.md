@@ -178,6 +178,7 @@ Después llega la resolución del ciclo (§2), que actualiza OKR, stock, contado
 - **Tiempo de ciclo**: barra deslizante, por defecto **15 s** (rango 3–60 s). A su derecha, el tiempo que falta para el ciclo siguiente.
 - Interruptor **«Mostrar estado por ciclo»**: resume en la parte superior las decisiones del ciclo resuelto y su impacto (§8).
 - Interruptor **«Conexión API»**: permite que una IA juegue por HTTP (§9.1).
+- Interruptores **«Registro Sheets»** y **«Registro Db»** (a la derecha de «Conexión API», apagados por defecto): guardan las decisiones en Google Sheets y en PostgreSQL (§9.5).
 - Al terminar, por Stop o por agotar ciclos, se ofrece **guardar el resultado**.
 
 ## 8. Interfaz
@@ -201,7 +202,7 @@ Después llega la resolución del ciclo (§2), que actualiza OKR, stock, contado
 ```
 
 - **Cabecera, primera fila:** los cuatro botones de control (▶ ⏸ / ⏹ ⏭) en dos filas a la izquierda, los marcos de Cumplimiento, Productividad y Entrega, **Rentabilidad en fuente mayor** por ser el indicador total, el **Ciclo** actual (con el mismo aspecto que Entrega, sin color de nivel), el **emoji de estado** y, pegado al borde derecho, el botón **⚙** de configuración (§8.1). No lleva rótulo «OKR».
-- **Cabecera, segunda fila** (de izquierda a derecha): el chip de fase, con colores suaves (**Listo** azul, **En juego** anaranjado, **En pausa** gris, **Terminada** verde); los desplegables **Piloto** y **Modo** (§9.4); el **Escenario**; **Conexión API** con su indicador de actividad; el interruptor **Limitar ciclos**, **Ciclos totales** (editable), **Ciclos pendientes** y **Siguiente ciclo** (estos dos con el mismo formato, pero de solo lectura), el deslizador de **Tiempo de ciclo** y, a continuación, **Mostrar estado por ciclo**. En pantallas estrechas la fila se parte en varias.
+- **Cabecera, segunda fila** (de izquierda a derecha): el chip de fase, con colores suaves (**Listo** azul, **En juego** anaranjado, **En pausa** gris, **Terminada** verde); los desplegables **Piloto** y **Modo** (§9.4); el **Escenario**; **Conexión API** con su indicador de actividad; **Registro Sheets** y **Registro Db** (🟢 escribiendo, 🔴 error; deshabilitados si el servidor no tiene ese destino configurado); el interruptor **Limitar ciclos**, **Ciclos totales** (editable), **Ciclos pendientes** y **Siguiente ciclo** (estos dos con el mismo formato, pero de solo lectura), el deslizador de **Tiempo de ciclo** y, a continuación, **Mostrar estado por ciclo**. En pantallas estrechas la fila se parte en varias.
 - **Franja de razonamiento:** bajo la cabecera, muestra el razonamiento de quien juega (bot, agente externo o IA). Con el piloto IA indica además el estado de la petición y lleva el botón **Ver respuesta** (§9.4).
 - **Estilo de los controles:** los interruptores deslizantes son los mismos que encienden y apagan las líneas. El desplegable de escenario tiene el mismo aspecto que el campo «Ciclos totales» (fondo gris, tamaño de letra un punto mayor que su etiqueta).
 - **Iconos:** 📋 Demanda comercial, 🏭 Líneas de producción, 📦 Stock de expediciones, 🚚 Muelles. En las velocidades, 🐌 Baja, 🐕 Estándar y 🐎 Alta (un caballo desbocado: velocidad y descontrol).
@@ -316,6 +317,28 @@ Dos desplegables de la cabecera deciden quién juega y cómo:
 - **Configuración:** crear `.env.local` (a partir de `.env.example`) con `GEMINI_API_KEY` y, si se quiere, `GEMINI_MODEL` (por defecto `gemini-3.6-flash`). `.env.local` no se sube a git; **no poner la clave en `.env.example`**, que sí se versiona.
 - **Sin clave, la aplicación arranca igual.** Al elegir Piloto → IA, la franja de razonamiento muestra «IA no disponible» con el motivo, y el resto del juego (usuario y bots) funciona con normalidad.
 - **Latencia real:** con `gemini-3.6-flash` cada decisión tarda unos 5–15 s, así que en el modo autónomo una partida de pocos ciclos dura un rato: conviene limitar los ciclos en la demo.
+
+### 9.5 Registro de decisiones (base de conocimiento)
+
+Dos interruptores independientes en la cabecera, **Registro Sheets** y **Registro Db** (a la derecha de «Conexión API», apagados por defecto), guardan las decisiones de **todos los pilotos** (Usuario, Bot e IA) para alimentar una base de conocimiento. Los datos no se consideran sensibles. Se pueden activar los dos a la vez; un fallo en uno no afecta a la partida ni al otro. Indicador: 🟢 escribiendo, 🔴 error (el texto emergente explica cuál), deshabilitado si el servidor no tiene ese destino configurado.
+
+- **Transporte:** la interfaz genera los mismos mensajes para todos los destinos (`añadir` fila, `actualizar` filas por filtro) y los envía a `POST /api/registro/<destino>` (`sheets` o `db`). `GET /api/registro/<destino>/estado` informa de si está configurado y de los errores; con `?sondear=1` (lo usa la interfaz mientras el interruptor está activo) comprueba además que el destino responde. Cada destino (`servidor/registro.ts`) pone los mensajes en cola, los agrupa en lotes y reintenta 2 veces; si sigue fallando descarta el lote y deja el error visible. Nunca bloquea la partida.
+- **Google Sheets** (`servidor/sheets.ts`): reenvía los lotes por HTTPS a un webhook de Apps Script (`servidor/apps-script/registro.gs`) con un secreto compartido. Configuración en `.env.local`: `SHEETS_WEBHOOK_URL` y `SHEETS_SECRET`. El script se ejecuta con la cuenta propietaria, así que la hoja puede ser privada; el acceso «Cualquier usuario» solo abre la URL y sin el secreto no escribe nada. Fuerza a texto los valores que empiezan por `= + - @` (evita fórmulas inyectadas por el texto de una IA) y trunca las celdas a 49.000 caracteres.
+- **PostgreSQL** (`servidor/postgres.ts`, dependencia `pg`): contenedor propio `brewfactory-db` (`docker-compose.yml`, `npm run db:up`), independiente de cualquier otra instancia, escuchando solo en `127.0.0.1:5433`. Configuración en `.env.local`: `BREWFACTORY_DB_PASSWORD` (la lee Docker) y `BREWFACTORY_DATABASE_URL`. Las tablas y la vista se crean solas (`CREATE … IF NOT EXISTS`); cada lote se escribe en una transacción. Las tablas y columnas válidas salen del esquema del servidor (`TABLAS`): nunca se usa texto de la interfaz como identificador SQL sin comprobarlo y los valores van como parámetros. Errores habituales explicados en el indicador (base parada, contraseña incorrecta).
+- **Tabla/hoja `decisiones`:** una fila por ciclo decidido, clave `(partida_id, ciclo)`. `ciclo` es el del estado que vio quien decidió (el resultado es el ciclo siguiente). En PostgreSQL, `estado_json`, `acciones_json` y `resultado_json` son `jsonb` (consultables).
+
+| Grupo | Columnas |
+|---|---|
+| Identificación | `partida_id`, `ciclo`, `timestamp`, `piloto`, `modo`, `modelo`, `escenario`, `semilla`, `balance_hash` |
+| Entrada | `estado_json` (el mismo estado que recibe la IA, sin las reglas ni el formato, que son constantes), `errores_ciclo_anterior` |
+| Decisión | `acciones_json` (configuración aplicada), `razonamiento`, `acciones_descartadas` |
+| Resultado | `rentabilidad_antes`, `rentabilidad_despues`, `delta_rentabilidad`, `delta_cumplimiento`, `delta_productividad`, `delta_entrega`, `resultado_json` (sucesos, efectos y OKR) |
+| Retorno (se rellena después) | `retorno_3_ciclos` (rentabilidad 3 ciclos después menos la del estado visto), `retorno_hasta_final`, `rentabilidad_final`, `ciclos_partida` |
+
+- **Tabla/hoja `reglas`:** una fila por versión de reglas y balance (`balance_hash`, `timestamp`, `reglas_json`, `balance_json`), añadida solo si esa versión aún no existe en ese destino. Cada fila de `decisiones` apunta a ella por `balance_hash`. Si un destino se activa a mitad de partida, recibe también las reglas de esa partida.
+- **Vista `mejores_jugadas`** (solo PostgreSQL): decisiones con `retorno_3_ciclos` ya calculado, de mayor a menor retorno; punto de partida para elegir ejemplos.
+- **Cuándo se cierra una partida:** al terminar (o parar), al empezar otra o al apagar todos los interruptores; entonces se rellenan las columnas de retorno que faltan. Si se activa un destino a mitad de partida, se registra desde el siguiente ciclo.
+- **Uso como conocimiento:** filtrar por `retorno_hasta_final` alto y por reglas (`balance_hash`) iguales a las vigentes; las jugadas de los bots sirven de referencia y las de la IA muestran también sus errores (`acciones_descartadas`). Las mejores jugadas se pueden inyectar como ejemplos en el prompt de la IA (no implementado todavía).
 
 ## 10. Arquitectura técnica
 

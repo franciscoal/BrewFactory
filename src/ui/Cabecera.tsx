@@ -47,6 +47,45 @@ function CampoLectura({ etiqueta, valor, titulo }: { etiqueta: string; valor: st
   );
 }
 
+const DESTINOS_REGISTRO = [
+  {
+    id: 'sheets',
+    nombre: 'Registro Sheets',
+    donde: 'una hoja de Google Sheets',
+    falta: 'faltan SHEETS_WEBHOOK_URL y SHEETS_SECRET en .env.local',
+  },
+  {
+    id: 'db',
+    nombre: 'Registro Db',
+    donde: 'la base de datos PostgreSQL',
+    falta: 'falta BREWFACTORY_DATABASE_URL en .env.local (y arrancar la base con npm run db:up)',
+  },
+] as const;
+
+/** Interruptor de un destino del registro de decisiones: 🟢 escribiendo, 🔴 error, deshabilitado si el servidor no lo tiene configurado. */
+function InterruptorRegistro({ nombre, destino }: { nombre: string; destino: (typeof DESTINOS_REGISTRO)[number] }) {
+  const { registroActivo, setRegistroActivo, registro } = useCtx();
+  const activo = registroActivo[destino.id];
+  const r = registro[destino.id];
+  return (
+    <Interruptor
+      marcado={activo && r.disponible === true}
+      onCambio={(v) => setRegistroActivo(destino.id, v)}
+      desactivado={r.disponible !== true}
+      etiqueta={`${nombre}${activo && r.disponible ? (r.ultimoError ? ' 🔴' : ' 🟢') : ''}`}
+      titulo={
+        r.disponible !== true
+          ? `No disponible: ${destino.falta} (solo con npm run dev o preview)`
+          : activo && r.ultimoError
+            ? `Error al escribir en ${destino.donde}: ${r.ultimoError}`
+            : activo
+              ? `Guardando estado, acciones y resultado de cada ciclo en ${destino.donde} (${r.enviados} enviados, ${r.pendientes} pendientes)`
+              : `Guarda el estado, las acciones y el resultado de cada ciclo en ${destino.donde}`
+      }
+    />
+  );
+}
+
 const NOMBRE_FASE = { detenido: 'Listo', jugando: 'En juego', pausa: 'En pausa', terminado: 'Terminada' } as const;
 
 export function Cabecera() {
@@ -139,6 +178,10 @@ export function Cabecera() {
                   : 'Permite que una IA juegue a través de la API HTTP local'
           }
         />
+
+        {DESTINOS_REGISTRO.map((d) => (
+          <InterruptorRegistro key={d.id} nombre={d.nombre} destino={d} />
+        ))}
 
         <Interruptor marcado={j.limitar} onCambio={(v) => setJ((x) => ({ ...x, limitar: v }))} etiqueta="Limitar ciclos" />
         <label class="campo">

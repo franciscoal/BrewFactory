@@ -169,3 +169,46 @@ describe('API para la IA', () => {
     expect(r.headers.get('access-control-allow-origin')).toBe('*');
   });
 });
+
+describe('API del registro de decisiones', () => {
+  const mensaje = { op: 'anadir', hoja: 'decisiones', columnas: ['a'], filas: [{ a: 1 }] };
+
+  it('sin destino configurado, informa de que no está disponible', async () => {
+    const h = await arrancar();
+    expect(await (await h.pedir('/registro/sheets/estado')).json()).toEqual({ disponible: false });
+    expect((await h.post('/registro/sheets', { mensajes: [mensaje] })).status).toBe(503);
+    expect(await (await h.pedir('/registro/db/estado')).json()).toEqual({ disponible: false });
+    expect(await (await h.pedir('/registro/constructor/estado')).json()).toEqual({ disponible: false });
+  });
+
+  it('con destino, valida y encola los mensajes; cada destino tiene su cola', async () => {
+    const encolados: unknown[] = [];
+    const registro = {
+      encolar: (m: unknown[]) => void encolados.push(...m),
+      estado: () => ({ pendientes: 1, enviados: 0, perdidos: 0, ultimoError: null }),
+      vaciar: async () => undefined,
+    };
+    const h = await arrancar({ registros: { db: registro, sheets: null } });
+    expect(await (await h.pedir('/registro/db/estado')).json()).toMatchObject({ disponible: true, pendientes: 1 });
+    expect((await h.post('/registro/db', { mensajes: [mensaje] })).status).toBe(202);
+    expect(encolados).toHaveLength(1);
+    expect((await h.post('/registro/sheets', { mensajes: [mensaje] })).status).toBe(503);
+    expect((await h.post('/registro/db', { mensajes: [{ op: 'borrar', hoja: 'x' }] })).status).toBe(400);
+    expect((await h.post('/registro/db', 'no es json')).status).toBe(400);
+    expect(encolados).toHaveLength(1);
+  });
+
+  it('con ?sondear=1 comprueba que el destino responde antes de dar el estado', async () => {
+    let sondeos = 0;
+    const registro = {
+      encolar: () => undefined,
+      estado: () => ({ pendientes: 0, enviados: 0, perdidos: 0, ultimoError: sondeos > 0 ? 'caído' : null }),
+      vaciar: async () => undefined,
+      sondear: async () => void sondeos++,
+    };
+    const h = await arrancar({ registros: { db: registro } });
+    expect((await (await h.pedir('/registro/db/estado')).json()).ultimoError).toBeNull();
+    expect(sondeos).toBe(0);
+    expect((await (await h.pedir('/registro/db/estado?sondear=1')).json()).ultimoError).toBe('caído');
+  });
+});

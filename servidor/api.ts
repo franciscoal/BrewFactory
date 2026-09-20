@@ -3,6 +3,8 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { resolve } from 'node:path';
 import { ErrorGemini, leerSkill } from './gemini.ts';
 import type { Gemini } from './gemini.ts';
+import { validarMensajes } from './registro.ts';
+import type { Registro } from './registro.ts';
 
 /**
  * API HTTP local para que una IA (o cualquier programa) juegue a BrewFactory.
@@ -16,6 +18,8 @@ import type { Gemini } from './gemini.ts';
  *   POST /api/acciones  → cuerpo: JSON de acciones; responde con las acciones descartadas
  *   POST /api/paso      → resuelve un ciclo; responde con el estado nuevo
  *   GET  /api/skill     → instrucciones para que la IA sepa jugar (Markdown)
+ * Registro de decisiones (lo usa la interfaz), con destino `sheets` o `db`: GET /api/registro/<destino>/estado[?sondear=1],
+ * POST /api/registro/<destino> (ver servidor/registro.ts).
  * Internas (solo la interfaz, con `?c=<id de la pestaña>`): POST /api/interno/publicar, GET /api/interno/pendientes,
  * POST /api/interno/resultado. Si hay varias pestañas abiertas, solo una controla la API (las demás reciben 409).
  */
@@ -44,6 +48,8 @@ export interface ResultadoInterfaz {
 export interface OpcionesApi {
   /** Cliente de la IA (Gemini). Sin él, `/api/ia/*` responde que no está configurada. */
   ia?: Gemini | null;
+  /** Destinos del registro de decisiones (`sheets`, `db`). Un destino ausente o `null` responde que no está configurado. */
+  registros?: Record<string, Registro | null>;
   /** Instrucciones de sistema para la IA. Por defecto, el skill. */
   sistemaIA?: () => string;
   /** Tiempo máximo que espera una petición del agente a que la interfaz responda. */
@@ -60,6 +66,7 @@ export function crearApi(opciones: OpcionesApi = {}) {
   const conexionMs = opciones.conexionMs ?? 4000;
   const rutaSkill = opciones.rutaSkill ?? resolve('Docs/skill-jugar-brewfactory.md');
   const ia = opciones.ia ?? null;
+  const registros = opciones.registros ?? {};
   const sistemaIA = opciones.sistemaIA ?? (() => leerSkill(rutaSkill));
 
   let estado: unknown = null;
@@ -177,6 +184,24 @@ export function crearApi(opciones: OpcionesApi = {}) {
         } catch (err) {
           if (err instanceof ErrorGemini) return responder(res, err.estado === 0 ? 504 : 502, { error: err.message, estadoGemini: err.estado });
           throw err;
+        }
+      }
+
+      // ── Registro de decisiones (Google Sheets, PostgreSQL) ────────────────
+      const destino = /^\/registro\/([a-z]+)(\/estado)?$/.exec(ruta);
+      if (destino) {
+        const [, nombre, esEstado] = destino;
+        const registro = Object.hasOwn(registros, nombre) ? registros[nombre] : null;
+        if (metodo === 'GET' && esEstado) {
+          if (registro && url.searchParams.get('sondear')) await registro.sondear?.();
+          return responder(res, 200, { disponible: !!registro, ...(registro?.estado() ?? {}) });
+        }
+        if (metodo === 'POST' && !esEstado) {
+          if (!registro) return responder(res, 503, { error: `Registro «${nombre}» no disponible: falta su configuración en .env.local.` });
+          const mensajes = validarMensajes(JSON.parse(await leerCuerpo(req)));
+          if (typeof mensajes === 'string') return responder(res, 400, { error: mensajes });
+          registro.encolar(mensajes);
+          return responder(res, 202, { ok: true, ...registro.estado() });
         }
       }
 

@@ -1,0 +1,24 @@
+# Base de datos PostgreSQL propia de BrewFactory (registro de decisiones). Independiente de cualquier otra instancia.
+# Arranque: npm run db:up   (lee la contraseña de .env.local: BREWFACTORY_DB_PASSWORD)
+services:
+  brewfactory-db:
+    image: postgres:16-alpine
+    container_name: brewfactory-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: brewfactory
+      POSTGRES_DB: brewfactory
+      POSTGRES_PASSWORD: ${BREWFACTORY_DB_PASSWORD:?Falta BREWFACTORY_DB_PASSWORD en .env.local}
+    ports:
+      # Solo accesible desde este equipo; 5433 para no chocar con otra instancia en el 5432.
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - brewfactory-db-datos:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U brewfactory -d brewfactory"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  brewfactory-db-datos:

@@ -59,8 +59,48 @@ Otras funciones de la cabecera:
 - **▶ ⏸ ⏹ ⏭**: Play, Pause, Stop y Paso (un ciclo manual).
 - **Piloto y Modo**: **Usuario** (manual, juegas tú), **Bot** (Gestor, Todo Estándar… juega solo y explica sus decisiones) o **IA** (Gemini; ver más abajo). Con un bot, baja el tiempo de ciclo para verlo rápido.
 - **Conexión API**: permite que un agente externo juegue por HTTP.
+- **Registro Sheets** y **Registro Db**: guardan estado, acciones y resultado de cada ciclo en una hoja de Google Sheets y/o en PostgreSQL (apagados por defecto; ver «Registro de decisiones»). Son independientes: se pueden activar los dos a la vez.
 - **⚙ Configuración**: ajusta todas las bonificaciones y penalizaciones y las guarda en `public/config/balance.json`.
 - Pestaña **Resultados**: gráficas y tabla por ciclo. Al terminar la partida se puede guardar el resultado en JSON.
+
+## Registro de decisiones (base de conocimiento para una IA)
+
+Dos destinos independientes, cada uno con su interruptor. Ambos guardan lo mismo: una fila por ciclo en `decisiones` y una por versión de reglas en `reglas`. Los fallos de un destino no afectan a la partida ni al otro (el indicador pasa a 🔴).
+
+### Google Sheets
+
+Con el interruptor **Registro Sheets** activo, cada ciclo añade una fila a la hoja `decisiones` (estado que vio quien decidió, acciones propuestas, razonamiento, resultado y retorno a 3 ciclos y hasta el final de la partida) y, una vez por versión de reglas/balance, una fila en `reglas`. Se registran todos los pilotos (columna `piloto`). Los fallos de Google no afectan a la partida: el indicador pasa a 🔴.
+
+Preparación (una vez, con tu cuenta de Google; el script se ejecuta como tú, así que **la hoja puede seguir siendo privada**):
+
+1. En la hoja: **Extensiones → Apps Script**. Pega [servidor/apps-script/registro.gs](servidor/apps-script/registro.gs) y guarda.
+2. **Ajustes del proyecto → Propiedades de la secuencia de comandos**: añade `SECRETO` con un texto largo y aleatorio.
+3. **Implementar → Nueva implementación → Aplicación web**. Ejecutar como *Yo*; acceso *Cualquier usuario* (solo permite llamar a la URL; sin el secreto no escribe nada). Autoriza los permisos que pida.
+4. En `.env.local`: `SHEETS_WEBHOOK_URL` (la URL que termina en `/exec`) y `SHEETS_SECRET` (el mismo secreto). Reinicia `npm run dev`.
+
+Si cambias el script hay que publicar una **versión nueva** (Implementar → Administrar implementaciones → editar). Si tu cuenta es de una organización, el administrador puede impedir el acceso «Cualquier usuario».
+
+### PostgreSQL (Docker)
+
+**Registro Db** escribe en una base PostgreSQL **propia de BrewFactory**: un contenedor `brewfactory-db` (postgres:16-alpine, solo accesible desde este equipo en `127.0.0.1:5433`) definido en [docker-compose.yml](docker-compose.yml). No usa ni toca ninguna otra instancia de Postgres que tengas en Docker.
+
+En un equipo nuevo, una sola vez:
+
+1. En `.env.local` define una contraseña y la URL (la misma contraseña en las dos):
+   ```
+   BREWFACTORY_DB_PASSWORD=una_contraseña_larga
+   BREWFACTORY_DATABASE_URL=postgres://brewfactory:una_contraseña_larga@localhost:5433/brewfactory
+   ```
+2. `npm run db:up` crea y arranca el contenedor (espera a que esté sano). Las tablas (`decisiones`, `reglas`) y la vista `mejores_jugadas` se crean solas al activar el interruptor.
+3. Reinicia `npm run dev`. `npm run db:down` para el contenedor sin borrar los datos (viven en el volumen `brewfactory-db-datos`).
+
+Consulta rápida de datos:
+
+```bash
+docker exec brewfactory-db psql -U brewfactory -d brewfactory -c "select * from mejores_jugadas limit 10"
+```
+
+Si cambias `BREWFACTORY_DB_PASSWORD` con datos ya creados, la base seguirá con la contraseña antigua (solo se aplica al crear el volumen): bórralo con `docker compose --env-file .env.local down -v` (**pierde los datos**) o cámbiala con `ALTER USER`.
 
 ## Jugar con una IA
 

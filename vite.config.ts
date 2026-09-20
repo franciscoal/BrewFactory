@@ -7,11 +7,14 @@ import type { Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
 import { crearApi } from './servidor/api.ts';
 import { geminiDesdeEntorno } from './servidor/gemini.ts';
+import { registroPostgresDesdeEntorno } from './servidor/postgres.ts';
+import { registroSheetsDesdeEntorno } from './servidor/sheets.ts';
 
 /** Monta la API para la IA (servidor/api.ts) bajo /api en el servidor de desarrollo y en `vite preview`. */
 function apiParaIA(env: Record<string, string>): Plugin {
   // La clave de Gemini se lee de .env.local en el servidor; nunca se expone al navegador.
-  const api = crearApi({ ia: geminiDesdeEntorno(env) });
+  // El webhook de Sheets, su secreto y la URL de PostgreSQL también se quedan en el servidor.
+  const api = crearApi({ ia: geminiDesdeEntorno(env), registros: { sheets: registroSheetsDesdeEntorno(env), db: registroPostgresDesdeEntorno(env) } });
   return {
     name: 'brewfactory-api-ia',
     configureServer: (servidor) => void servidor.middlewares.use('/api', (req, res, siguiente) => void api.manejador(req, res, siguiente)),

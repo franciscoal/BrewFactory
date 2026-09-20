@@ -27,8 +27,9 @@ npm run dev                    # http://localhost:5173 (si está ocupado, Vite u
 
 | Comando | Para qué |
 |---|---|
+| `npm run db:up` / `npm run db:down` | Arranca / para el contenedor PostgreSQL propio (`brewfactory-db`, `docker-compose.yml`, puerto 5433). Necesita Docker y `BREWFACTORY_DB_PASSWORD` en `.env.local`. |
 | `npm run dev` / `npm run preview` | Servidor de desarrollo / de la build. Ambos montan `/api` (agentes e IA) y `/__config` (guardar balance). |
-| `npm test`, `npm run typecheck`, `npm run build` | Comprobaciones. Son 104 tests (motor, informe, IA, bots, servidor, configuración). |
+| `npm test`, `npm run typecheck`, `npm run build` | Comprobaciones. Son 149 tests (motor, informe, IA, bots, servidor, configuración, registro en Sheets y Postgres). |
 | `npx tsx scripts/calibrar.ts 48 200 [--solo-aleatorias] [--set=grupo.campo=valor] [--config=x.json]` | Juega miles de partidas con bots y muestra tablas. No modifica ficheros. Con opciones hay que llamarlo así: `npm run calibrar -- …` no las reenvía bien. |
 
 ## Arquitectura
@@ -39,6 +40,7 @@ npm run dev                    # http://localhost:5173 (si está ocupado, Vite u
 - `src/bots/` — estrategias (`gestor`, `adaptativo-fino`, …) usadas por `calibrar` y por el piloto Bot; `explicar.ts` genera su «razonamiento».
 - `src/ui/controlIA.ts` — conversación con la IA **sin React** (`ControlIA`, probada con entorno falso): modo *paso a paso* (⏭: pedir → aplicar → resolver y pedir) y *autónomo* (▶: bucle sin tiempo de ciclo). `useControlIA.ts` lo conecta a React.
 - `servidor/` — lado servidor montado por Vite: `api.ts` (buzón para agentes externos: `/api/estado|acciones|paso|skill`, y `/api/ia/*`) y `gemini.ts` (cliente `generateContent` con salida JSON estructurada, clave en cabecera `x-goog-api-key`, reintenta 429/5xx hasta 2 veces).
+- **Registro de decisiones** (interruptores «Registro Sheets» y «Registro Db», independientes): `src/ui/registroDecisiones.ts` genera los mensajes (filas, retorno a 3 ciclos y al final; `useRegistro`) y los envía a `/api/registro/<destino>`; en `servidor/`, `registro.ts` (validación y cola con reintentos, común), `sheets.ts` + `apps-script/registro.gs` (webhook que se pega en la hoja) y `postgres.ts` (esquema `TABLAS`, SQL parametrizado, `pg`). Config en `.env.local`: `SHEETS_WEBHOOK_URL`/`SHEETS_SECRET` y `BREWFACTORY_DATABASE_URL`/`BREWFACTORY_DB_PASSWORD`. Si se añade una columna, va en `COLUMNAS_DECISIONES` **y** en `TABLAS` (un test las compara). Detalle en `Docs/brevFactory.md` §9.5.
 - `src/escenarios/` — escenarios enlatados en JSON. `Docs/skill-jugar-brewfactory.md` — instrucciones para cualquier IA (se envía a Gemini como *system instruction*, sin la parte de la API HTTP).
 
 ## Cosas que no son obvias
@@ -50,6 +52,12 @@ npm run dev                    # http://localhost:5173 (si está ocupado, Vite u
 - **IA real**: sin tiempo de ciclo (el deslizador queda deshabilitado). Latencia típica 5–15 s por decisión; en la demo conviene «Limitar ciclos». La IA se equivoca a veces (p. ej. asignar pedidos ya terminados): se descartan y se avisa. El usuario ha dicho que no necesita mejorar su calidad, solo que se vea la dinámica.
 - **Probar la IA sin clave real**: `GEMINI_BASE_URL` apunta a un servidor que imite `generateContent` (así se probó).
 - **Balance actual**: Alta −6 %, demanda 1,3 pedidos/ciclo en oleadas, retrasos duros (−8/−16/−30 %). El bot «gestor» gana a «todo Estándar» por unos 19 puntos. Los tres se muestran con `calibrar`.
+
+## PostgreSQL en Docker
+
+- El contenedor de BrewFactory es `brewfactory-db` (postgres:16-alpine, `127.0.0.1:5433`, volumen `brewfactory-db-datos`). **En este equipo hay otras instancias de Docker de otra herramienta (`prodigy-db` en el 5432, `prodigy-backend`, `prodigy-qdrant`): no tocarlas.**
+- La contraseña se generó al configurar este equipo y está solo en `.env.local` (ignorado por git). En un equipo nuevo hay que definirla antes de `npm run db:up` (ver README).
+- El pool de `pg` emite `error` si la base se cae con conexiones inactivas: `postgres.ts` lo escucha; sin eso se cae todo el servidor de Vite.
 
 ## Entorno Windows (PowerShell 5.1)
 

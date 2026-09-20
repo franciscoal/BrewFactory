@@ -3,6 +3,7 @@ import { useContext } from 'preact/hooks';
 import type { Estado } from '../engine';
 import type { EstadoApi } from './conexionApi';
 import type { DisponibilidadIA } from './ia';
+import type { Activos, EstadosRegistro } from './registroDecisiones';
 import type { TipoPiloto } from './piloto';
 import type { ControlIAUi } from './useControlIA';
 import type { Cambios, Juego, Resultado } from './juego';
@@ -30,6 +31,10 @@ export interface Contexto {
   apiActiva: boolean;
   setApiActiva: (v: boolean) => void;
   estadoApi: EstadoApi;
+  /** Registro de las decisiones (base de conocimiento) en Google Sheets y en PostgreSQL: un interruptor por destino. */
+  registroActivo: Activos;
+  setRegistroActivo: (destino: keyof Activos, activo: boolean) => void;
+  registro: EstadosRegistro;
   /** Toggle «Mostrar estado por ciclo». */
   mostrarInforme: boolean;
   setMostrarInforme: (v: boolean) => void;

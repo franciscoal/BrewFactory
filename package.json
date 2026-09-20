@@ -9,15 +9,19 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "calibrar": "tsx scripts/calibrar.ts"
+    "calibrar": "tsx scripts/calibrar.ts",
+    "db:up": "docker compose --env-file .env.local up -d --wait",
+    "db:down": "docker compose --env-file .env.local down"
   },
   "dependencies": {
     "chart.js": "^4.5.1",
+    "pg": "^8.23.0",
     "preact": "^10.29.8"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.6",
     "@types/node": "^26.6.2",
+    "@types/pg": "^8.23.1",
     "tsx": "^4.23.13",
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
